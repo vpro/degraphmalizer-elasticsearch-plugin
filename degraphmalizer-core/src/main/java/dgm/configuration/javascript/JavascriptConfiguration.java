@@ -123,7 +123,7 @@ class JavascriptIndexConfig implements IndexConfig
                 {
                     if(name.endsWith(".conf.js"))
                         return true;
-                    log.error("File [{}] in config dir [{}] has wrong name format and is ignored. Proper format: [target type].conf.js", name, dir.getAbsolutePath());
+                    log.warn("File [{}] in config dir [{}] has wrong name format and is ignored. Proper format: [target type].conf.js", name, dir.getAbsolutePath());
                     return false;
                 }
             };
