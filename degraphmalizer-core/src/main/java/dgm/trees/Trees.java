@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
 import dgm.exceptions.UnreachableCodeReachedException;
 
@@ -65,6 +64,11 @@ public final class Trees
         }
     }
 
+    public static final <_> boolean isLeaf(final Tree<_> tree)
+    {
+        return Iterables.isEmpty(tree.children());
+    }
+
     /**
 	 * Map a function over a tree
 	 * 
@@ -74,10 +78,11 @@ public final class Trees
 	 */
 	public static <A,B> Tree<B> map(final Function<A,B> fn, Tree<A> tree)
 	{
-		final B value = fn.apply(tree.value);
+		final B value = fn.apply(tree.value());
 		
-		if (tree.isLeaf())
-			return new Tree<B>(value);
+		if (isLeaf(tree))
+            return new ImmutableTree<B>(value);
+
 		else
 		{
 			final Function<Tree<A>,Tree<B>> tmap = new Function<Tree<A>,Tree<B>>()
@@ -87,9 +92,8 @@ public final class Trees
 						return map(fn, tree);
 					}
 				};
-			
-			final Collection<Tree<B>> tb = Collections2.transform(tree.children, tmap);
-			return new Tree<B>(value, tb);
+			final Iterable<Tree<B>> tb = Iterables.transform(tree.children(), tmap);
+			return new ImmutableTree<B>(value, tb);
 		}
 	}
 	
@@ -301,90 +305,5 @@ public final class Trees
 			};
 	}
 	
-	enum EventType
-	{
-		VISIT_NODE, BEGIN_CHILDREN, END_CHILDREN
-	}
-	
-	/**
-	 * BFS visit tree
-	 */
-	public static <A> void bfsVisit(final A root, final TreeViewer<A> viewer, final TreeVisitor<A> visitor)
-	{
-		class VisitEvent
-		{
-			public final A node;
-			public final EventType eventType;
-			public final VisitEvent otherSide;
-			
-			public VisitEvent(EventType eventType, A node, VisitEvent other)
-			{
-				this.node = node;
-				this.eventType = eventType;
-				this.otherSide = other;
-			}
-			
-			// return true if event type == BEGIN_NODE/END_NODE
-			public boolean callVisitor(TreeVisitor<A> visitor)
-			{
-				switch (eventType)
-				{
-					case BEGIN_CHILDREN:
-						visitor.beginChildren(node, viewer);
-						return true;
-					case END_CHILDREN:
-						visitor.endChildren(node, viewer);
-						return true;
-					case VISIT_NODE:
-						visitor.visitNode(node, viewer);
-						return false;
-					default:
-						throw new RuntimeException("OMGWTF Unreachable code reached...");
-				}
-			}
-		}
-		
-		final LinkedList<VisitEvent> q = new LinkedList<VisitEvent>();
-		q.offer(new VisitEvent(EventType.VISIT_NODE, root, null));
-		
-		VisitEvent insertionPt = null;
-		
-		while (!q.isEmpty())
-		{
-			final VisitEvent a = q.poll();
-			
-			// update the insertion point to the END_CHILDREN node
-			if (a.eventType == EventType.BEGIN_CHILDREN)
-				insertionPt = a.otherSide;
-			
-			// call visitor interface
-			if (a.callVisitor(visitor))
-				// nothing further to be done for marker event (BEGIN/END)
-				continue;
-			
-			
-			final VisitEvent end = new VisitEvent(EventType.END_CHILDREN, a.node, null);
-			final VisitEvent start = new VisitEvent(EventType.BEGIN_CHILDREN, a.node, end);
-			
-			insertBefore(q, start, insertionPt);
-			
-			// add children to end of the queue
-			for (A c : viewer.children(a.node))
-				insertBefore(q, new VisitEvent(EventType.VISIT_NODE, c, null), insertionPt);
-			
-			insertBefore(q, end, insertionPt);
-		}
-	}
-	
-	private static <A> void insertBefore(LinkedList<A> ll, A value, A before)
-	{
-		if (before == null)
-			ll.offer(value);
-		else
-		{
-			final int i = ll.indexOf(before);
-			ll.add(i, value);
-		}
-	}
-	
+
 }
