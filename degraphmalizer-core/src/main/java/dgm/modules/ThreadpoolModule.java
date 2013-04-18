@@ -1,14 +1,22 @@
 package dgm.modules;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.*;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import dgm.modules.bindingannotations.Degraphmalizes;
+import dgm.modules.bindingannotations.Fetches;
+import dgm.modules.bindingannotations.Recomputes;
 import dgm.modules.elasticsearch.QueryFunction;
-import dgm.modules.bindingannotations.*;
 
 import java.util.concurrent.*;
 
 public class ThreadpoolModule extends AbstractModule
 {
+    private static int MINTHREADPOOLSIZE=2;
+    private static int MAXTHREADPOOLSIZE=16;
+
+
     @Override
     protected final void configure()
     {
@@ -35,7 +43,10 @@ public class ThreadpoolModule extends AbstractModule
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder()
                 .setNameFormat("recomputer-%d").build();
 
-        return Executors.newCachedThreadPool(namedThreadFactory);
+        return new ThreadPoolExecutor(MINTHREADPOOLSIZE, MAXTHREADPOOLSIZE,
+                60L, TimeUnit.SECONDS,
+                new SynchronousQueue<Runnable>(),
+                namedThreadFactory);
     }
 
     @Provides
@@ -46,7 +57,10 @@ public class ThreadpoolModule extends AbstractModule
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder()
                 .setNameFormat("fetcher-%d").build();
 
-        return Executors.newCachedThreadPool(namedThreadFactory);
+        return new ThreadPoolExecutor(MINTHREADPOOLSIZE, MAXTHREADPOOLSIZE,
+                60L, TimeUnit.SECONDS,
+                new SynchronousQueue<Runnable>(),
+                namedThreadFactory);
     }
 
 }
