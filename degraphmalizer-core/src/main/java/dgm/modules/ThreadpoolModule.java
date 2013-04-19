@@ -15,6 +15,7 @@ public class ThreadpoolModule extends AbstractModule
 {
     private static int MINTHREADPOOLSIZE=2;
     private static int MAXTHREADPOOLSIZE=64;
+    private static int QUEUELIMIT=65536;
 
 
     @Override
@@ -45,8 +46,8 @@ public class ThreadpoolModule extends AbstractModule
 
         return new ThreadPoolExecutor(MINTHREADPOOLSIZE, MAXTHREADPOOLSIZE,
                 60L, TimeUnit.SECONDS,
-                new SynchronousQueue<Runnable>(),
-                namedThreadFactory);
+                new LinkedBlockingQueue<Runnable>(QUEUELIMIT),
+                namedThreadFactory,new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
     @Provides
@@ -59,8 +60,8 @@ public class ThreadpoolModule extends AbstractModule
 
         return new ThreadPoolExecutor(MINTHREADPOOLSIZE, MAXTHREADPOOLSIZE,
                 60L, TimeUnit.SECONDS,
-                new SynchronousQueue<Runnable>(),
-                namedThreadFactory);
+                new LinkedBlockingQueue<Runnable>(QUEUELIMIT),
+                namedThreadFactory,new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
 }
