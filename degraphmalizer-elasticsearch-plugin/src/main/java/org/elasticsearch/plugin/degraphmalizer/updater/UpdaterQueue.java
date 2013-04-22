@@ -39,7 +39,7 @@ public class UpdaterQueue implements Runnable,UpdaterQueueMBean {
             if (outputQueue.size() < limit) {
                 if (outputQueue.isEmpty() && !overflowFileManager.isEmpty()) {
                     overflowFileManager.load(outputQueue);
-                } else {
+                } else if (overflowFileManager.isEmpty()) {
                     try {
                         final DelayedImpl<Change> delayedChange = inputQueue.poll(1, TimeUnit.SECONDS); // Use poll() instead of take() to not miss the shutdown flag getting flipped to true.
                         if (delayedChange != null) {

@@ -51,17 +51,18 @@ public class UpdaterOverflowFileManager {
 
     public int countLines(File file) {
         LineNumberReader lnr = null;
+        int count=0;
         try {
             lnr = new LineNumberReader(new FileReader(file));
             while(lnr.skip(Long.MAX_VALUE)>0);
-            lnr.getLineNumber();
+            count = lnr.getLineNumber();
             lnr.close();
         } catch (IOException e) {
             LOG.error("Can't read from file {} " + file.getPath());
         } finally {
             closeQuietly(lnr);
         }
-        return 0;
+        return count;
     }
 
     public boolean isEmpty() {
