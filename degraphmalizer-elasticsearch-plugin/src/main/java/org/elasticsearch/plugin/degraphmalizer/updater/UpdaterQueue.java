@@ -11,7 +11,8 @@ import java.util.concurrent.DelayQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-public class UpdaterQueue implements Runnable,UpdaterQueueMBean {
+public class UpdaterQueue implements Runnable, UpdaterQueueMBean
+{
 
     private static final ESLogger LOG = Loggers.getLogger(UpdaterQueue.class);
 
@@ -26,31 +27,39 @@ public class UpdaterQueue implements Runnable,UpdaterQueueMBean {
 
     private boolean shuttingDown = false;
 
-    public UpdaterQueue(final String logPath, final String index, final int limit) {
-        this.limit = limit/2;
+    public UpdaterQueue(final String logPath, final String index, final int limit)
+    {
+        this.limit = limit / 2;
         this.index = index;
         this.overflowFileManager = new UpdaterOverflowFileManager(logPath, index, limit);
         registerMBean();
     }
 
     @Override
-    public void run() {
-        while (!shuttingDown) {
-            if (outputQueue.size() < limit) {
-                if (outputQueue.isEmpty() && !overflowFileManager.isEmpty()) {
-                    overflowFileManager.load(outputQueue);
-                } else if (overflowFileManager.isEmpty()) {
-                    try {
-                        final DelayedImpl<Change> delayedChange = inputQueue.poll(1, TimeUnit.SECONDS); // Use poll() instead of take() to not miss the shutdown flag getting flipped to true.
-                        if (delayedChange != null) {
-                            outputQueue.add(delayedChange);
-                        }
-                    } catch (InterruptedException e) {
-                        LOG.warn("Getting change from input queue interrupted: " + e.getMessage());
+    public void run()
+    {
+        while (!shuttingDown)
+        {
+            if (outputQueue.size() < limit)
+            {
+                if (overflowFileManager.isEmpty())
+                {
+                    copyInputToOutput();
+                } else
+                {
+                    if (outputQueue.isEmpty())
+                    {
+                        overflowFileManager.load(outputQueue);
+                    }
+                    if (inputQueue.size() >= limit)
+                    {
+                        overflowFileManager.save(inputQueue);
                     }
                 }
-            } else {
-                if (inputQueue.size() >= limit) {
+            } else
+            {
+                if (inputQueue.size() >= limit)
+                {
                     overflowFileManager.save(inputQueue);
                 }
             }
@@ -58,75 +67,107 @@ public class UpdaterQueue implements Runnable,UpdaterQueueMBean {
         flushInMemoryQueuesToDisk();
     }
 
-    public void add(final DelayedImpl<Change> change) {
+    private void copyInputToOutput()
+    {
+        try
+        {
+            final DelayedImpl<Change> delayedChange = inputQueue.poll(1, TimeUnit.SECONDS); // Use poll() instead of take() to not miss the shutdown flag getting flipped to true.
+            if (delayedChange != null)
+            {
+                outputQueue.add(delayedChange);
+            }
+        } catch (InterruptedException e)
+        {
+            LOG.warn("Getting change from input queue interrupted: " + e.getMessage());
+        }
+    }
+
+    public void add(final DelayedImpl<Change> change)
+    {
         inputQueue.add(change);
     }
 
-    public DelayedImpl<Change> take() throws InterruptedException {
+    public DelayedImpl<Change> take() throws InterruptedException
+    {
         return outputQueue.take();
     }
 
-    public boolean isEmpty() {
+    public boolean isEmpty()
+    {
         return inputQueue.isEmpty() && outputQueue.isEmpty() && overflowFileManager.isEmpty();
     }
 
     @Override
-    public int size() {
+    public int size()
+    {
         return inputQueue.size() + outputQueue.size() + overflowFileManager.size();
     }
 
     @Override
-    public int getInputQueueSize() {
+    public int getInputQueueSize()
+    {
         return inputQueue.size();
     }
 
     @Override
-    public int getOutputQueueSize() {
+    public int getOutputQueueSize()
+    {
         return outputQueue.size();
     }
 
     @Override
-    public int getOverflowSize() {
+    public int getOverflowSize()
+    {
         return overflowFileManager.size();
     }
 
     @Override
-    public String getIndex() {
+    public String getIndex()
+    {
         return index;
     }
 
-    public void shutdown() {
+    public void shutdown()
+    {
         shuttingDown = true; // Flag for thread to shut down
     }
 
     @Override
-    public void clear() {
+    public void clear()
+    {
         inputQueue.clear();
         outputQueue.clear();
         overflowFileManager.clear();
     }
 
-    private void flushInMemoryQueuesToDisk() {
-        while (!outputQueue.isEmpty()) {
+    private void flushInMemoryQueuesToDisk()
+    {
+        while (!outputQueue.isEmpty())
+        {
             overflowFileManager.save(outputQueue);
         }
 
-        while (!inputQueue.isEmpty()) {
+        while (!inputQueue.isEmpty())
+        {
             overflowFileManager.save(inputQueue);
         }
     }
 
 
-    private void registerMBean() {
-        try {
+    private void registerMBean()
+    {
+        try
+        {
             final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-            final ObjectName name = new ObjectName("org.elasticsearch.plugin.degraphmalizer.updater:type=UpdaterQueue,name=UpdaterQueue-"+index);
-            if (mbs.isRegistered(name)) {
+            final ObjectName name = new ObjectName("org.elasticsearch.plugin.degraphmalizer.updater:type=UpdaterQueue,name=UpdaterQueue-" + index);
+            if (mbs.isRegistered(name))
+            {
                 mbs.unregisterMBean(name);
             }
             mbs.registerMBean(this, name);
             LOG.info("Registered MBean");
-        } catch (Exception e) {
+        } catch (Exception e)
+        {
             LOG.error("Failed to register MBean", e);
         }
     }

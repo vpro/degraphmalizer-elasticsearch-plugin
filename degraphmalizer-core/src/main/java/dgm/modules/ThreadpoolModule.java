@@ -13,7 +13,7 @@ import java.util.concurrent.*;
 
 public class ThreadpoolModule extends AbstractModule
 {
-    private static int MINTHREADPOOLSIZE=2;
+    private static int MINTHREADPOOLSIZE=4;
     private static int MAXTHREADPOOLSIZE=64;
     private static int QUEUELIMIT=65536;
 
