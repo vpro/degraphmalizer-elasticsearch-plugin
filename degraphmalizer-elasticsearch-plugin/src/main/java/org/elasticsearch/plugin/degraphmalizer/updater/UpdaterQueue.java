@@ -38,6 +38,7 @@ public class UpdaterQueue implements Runnable, UpdaterQueueMBean
     @Override
     public void run()
     {
+        // TODO should be using wait/notify
         while (!shuttingDown)
         {
             if (outputQueue.size() < limit)
@@ -55,6 +56,7 @@ public class UpdaterQueue implements Runnable, UpdaterQueueMBean
                     {
                         overflowFileManager.save(inputQueue);
                     }
+                    nap();
                 }
             } else
             {
@@ -62,6 +64,7 @@ public class UpdaterQueue implements Runnable, UpdaterQueueMBean
                 {
                     overflowFileManager.save(inputQueue);
                 }
+                nap();
             }
         }
         flushInMemoryQueuesToDisk();
@@ -79,6 +82,18 @@ public class UpdaterQueue implements Runnable, UpdaterQueueMBean
         } catch (InterruptedException e)
         {
             LOG.warn("Getting change from input queue interrupted: " + e.getMessage());
+        }
+    }
+
+    private void nap()
+    {
+        try
+        {
+            Thread.sleep(250);
+
+        } catch (InterruptedException e)
+        {
+
         }
     }
 
