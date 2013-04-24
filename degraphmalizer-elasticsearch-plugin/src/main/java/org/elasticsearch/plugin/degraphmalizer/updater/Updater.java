@@ -49,7 +49,7 @@ public final class Updater implements Runnable {
         this.maxRetries = maxRetries;
 
         queue = new UpdaterQueue(logPath, index, queueLimit);
-        new Thread(queue).start();
+        new Thread(queue,"updaterqueue-"+index).start();
 
         errorFile = new File(logPath, index + "-error.log");
 
@@ -78,27 +78,34 @@ public final class Updater implements Runnable {
     }
 
     public void run() {
-        try {
-            boolean done = false;
-            while (!done) {
-                if (sending) {
-                    final Change change = queue.take().thing();
+        boolean done = false;
+        while (!done)
+        {
+            Change change = null;
+            try
+            {
+                if (sending)
+                {
+                    change = queue.take().thing();
                     perform(change);
-                } else {
+                } else
+                {
                     Thread.sleep(NAPTIME);
                 }
-                if (shutdownInProgress) {
+                if (shutdownInProgress)
+                {
                     queue.shutdown();
                     done = true;
                 }
+            } catch (Exception e)
+            {
+                LOG.error("Updater for index {} got exception: {} for the change {}", new Object[]{index, e, change});
             }
-        } catch (Exception e) {
-            LOG.error("Updater for index {} stopped with exception: {}", index, e);
-        } finally {
-            httpClient.getConnectionManager().shutdown();
-            queue.shutdown();
-            LOG.info("Updater stopped for index {}.", index);
         }
+        httpClient.getConnectionManager().shutdown();
+        queue.shutdown();
+        LOG.info("Updater stopped for index {}.", index);
+
     }
 
     public void add(final Change change) {

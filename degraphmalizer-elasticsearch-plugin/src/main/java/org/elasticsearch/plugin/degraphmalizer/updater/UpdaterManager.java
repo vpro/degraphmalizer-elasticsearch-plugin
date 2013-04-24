@@ -94,7 +94,7 @@ public class UpdaterManager extends AbstractLifecycleComponent<UpdaterManager> i
         }
         final Updater updater = new Updater(index, uriScheme, uriHost, uriPort, retryDelayOnFailureInMillis, logPath, queueLimit, maxRetries);
         updaters.put(index, updater);
-        new Thread(updater).start();
+        new Thread(updater,"updater-"+index).start();
         if (sending) updater.startSending();
         LOG.info("Updater started for index {}", index);
     }
