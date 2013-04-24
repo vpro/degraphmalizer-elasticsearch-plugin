@@ -23,11 +23,11 @@ public final class GraphUtilities
 {
     private static final Logger log = LoggerFactory.getLogger(GraphUtilities.class);
 
-    public static final String PREFIX             = "_";
-    public static final String IDENTIFIER         = PREFIX + "identifier";
+    public static final String PREFIX = "_";
+    public static final String IDENTIFIER = PREFIX + "identifier";
     public static final String SYMBOLIC_IDENTIFER = PREFIX + "symbolic";
-    public static final String OWNER              = PREFIX + "owner";
-    public static final String SYMBOLIC_OWNER     = PREFIX + "symbolicOwner";
+    public static final String OWNER = PREFIX + "owner";
+    public static final String SYMBOLIC_OWNER = PREFIX + "symbolicOwner";
 
     public static final String KEY_INDEX = PREFIX + "index";
     public static final String KEY_TYPE = PREFIX + "type";
@@ -36,28 +36,28 @@ public final class GraphUtilities
 
     public static final int RESERVED_COUNT = 8;
 
-    private GraphUtilities() {}
+    private GraphUtilities()
+    {
+    }
 
-	/**
-	 * Compute the vertices reached from <code>s</code> in one step in direction <code>d</code>.
-	 *
-	 * @param s Initial vertex
-	 * @param d Direction to follow edges
-	 *
-	 * @return Tree with value (null, s) and then all children as specified
+    /**
+     * Compute the vertices reached from <code>s</code> in one step in direction <code>d</code>.
      *
-	 */
-    public static Tree<Pair<Edge,Vertex>> childrenFrom(Vertex s, Direction d)
+     * @param s Initial vertex
+     * @param d Direction to follow edges
+     * @return Tree with value (null, s) and then all children as specified
+     */
+    public static Tree<Pair<Edge, Vertex>> childrenFrom(Vertex s, Direction d)
     {
         // view the graph as a tree
-        final TreeViewer<Pair<Edge,Vertex>> tv = new GraphTreeViewer(d);
+        final TreeViewer<Pair<Edge, Vertex>> tv = new GraphTreeViewer(d);
 
         // build a copy of that tree by BFS visiting it
-        final TreeBuilder<Pair<Edge,Vertex>> tb = new TreeBuilder<Pair<Edge, Vertex>>();
+        final TreeBuilder<Pair<Edge, Vertex>> tb = new TreeBuilder<Pair<Edge, Vertex>>();
 
         // but don't visit same node twice, ie. kill cycles
-        final OccurrenceTracker<Pair<Edge,Vertex>> ot = new NodeAlreadyVisitedTracker();
-        final CycleKiller<Pair<Edge,Vertex>> cktb = new CycleKiller<Pair<Edge, Vertex>>(tb, ot);
+        final OccurrenceTracker<Pair<Edge, Vertex>> ot = new NodeAlreadyVisitedTracker();
+        final CycleKiller<Pair<Edge, Vertex>> cktb = new CycleKiller<Pair<Edge, Vertex>>(tb, ot);
 
         Trees2.bfsVisit(new Pair<Edge, Vertex>(null, s), tv, cktb);
 
@@ -66,21 +66,22 @@ public final class GraphUtilities
 
     public static Iterable<Vertex> findVerticesInIndex(Graph graph, String index)
     {
-        return graph.getVertices(KEY_INDEX,index);
+        return graph.getVertices(KEY_INDEX, index);
     }
-    private static <_,A> boolean inTree(Tree<Pair<_,A>> tree, A thing)
+
+    private static <_, A> boolean inTree(Tree<Pair<_, A>> tree, A thing)
     {
-        if(tree.value() != null)
+        if (tree.value() != null)
         {
-            if(tree.value().b == null && thing == null)
+            if (tree.value().b == null && thing == null)
                 return true;
 
-            if(tree.value().b.equals(thing))
+            if (tree.value().b.equals(thing))
                 return true;
         }
 
-        for(Tree<Pair<_,A>> c : tree.children())
-            if(inTree(c, thing))
+        for (Tree<Pair<_, A>> c : tree.children())
+            if (inTree(c, thing))
                 return true;
 
         return false;
@@ -91,32 +92,32 @@ public final class GraphUtilities
     {
         if (graph instanceof MetaGraph && graph instanceof Neo4jGraph)
         {
-            GraphDatabaseService graphDatabaseService = ((MetaGraph<GraphDatabaseService>)graph).getRawGraph();
+            GraphDatabaseService graphDatabaseService = ((MetaGraph<GraphDatabaseService>) graph).getRawGraph();
             ReadableIndex<Node> indexer = graphDatabaseService.index().getNodeAutoIndexer().getAutoIndex();
-            Iterable<Node> itty = indexer.query(KEY_INDEX+":"+index+" AND "+KEY_TYPE+":"+type);
+            Iterable<Node> itty = indexer.query(KEY_INDEX + ":" + index + " AND " + KEY_TYPE + ":" + type);
             // TODO check for transaction, this is done in Neo4jgraph normally but we can't access that method.
-            return new Neo4jVertexIterable( itty, (Neo4jGraph)graph, false);
+            return new Neo4jVertexIterable(itty, (Neo4jGraph) graph, false);
         }
         return null;
     }
 
     /**
      * Set the property of an element to a json value.
-     *
+     * <p/>
      * If the value is an object the property is set to the JSON string, otherwise the property is set to the native
      * value represented by the JsonNode.
-     *
+     * <p/>
      * <ul>
      * <li>So "'foo'" is stored as a String "foo"
      * <li>A boolean "true" is stored as Boolean.TRUE, etc.
      * <li>But "{'foo':123}" is stored as a String "{'foo':123}"
      * </ul>
-     *
+     * <p/>
      * Normally you would just store (JSON) values, not objects or arrays.
      *
-     * @param elt The node or edge of which to set the property
+     * @param elt      The node or edge of which to set the property
      * @param property Property name
-     * @param value Property value
+     * @param value    Property value
      */
     public static void setProperty(Element elt, String property, JsonNode value)
     {
@@ -124,7 +125,7 @@ public final class GraphUtilities
         checkPropertyName(property);
 
         // values are directly inserted as strings
-        if(value.isValueNode())
+        if (value.isValueNode())
         {
             elt.setProperty(property, value.asText());
             return;
@@ -140,7 +141,7 @@ public final class GraphUtilities
 
         final Object obj = elt.getProperty(property);
 
-        if(! (obj instanceof String))
+        if (!(obj instanceof String))
             throw new RuntimeException("Property " + property + " is not in the expected format (String), it's a "
                     + obj.getClass().getSimpleName());
 
@@ -149,17 +150,15 @@ public final class GraphUtilities
         try
         {
             return om.readTree(s);
-        }
-        catch (IOException z)
+        } catch (IOException z)
         {
             try
             {
                 // TODO this is very shady.. anything that doesn't parse as JSON is read as string...
                 return om.readTree("\"" + s + "\"");
-            }
-            catch (IOException e)
+            } catch (IOException e)
             {
-                throw new RuntimeException("Failed to parse property " + property + " from '" + s +"'", z);
+                throw new RuntimeException("Failed to parse property " + property + " from '" + s + "'", z);
             }
         }
     }
@@ -171,7 +170,7 @@ public final class GraphUtilities
     {
         for (String key : element.getPropertyKeys())
         {
-            if (! key.startsWith(GraphUtilities.PREFIX))
+            if (!key.startsWith(GraphUtilities.PREFIX))
                 element.removeProperty(key);
         }
 
@@ -181,7 +180,7 @@ public final class GraphUtilities
 
     public static void checkPropertyName(String name)
     {
-        if(name.equals(IDENTIFIER) || name.equals(OWNER) || name.equals(SYMBOLIC_IDENTIFER) || name.equals(SYMBOLIC_OWNER))
+        if (name.equals(IDENTIFIER) || name.equals(OWNER) || name.equals(SYMBOLIC_IDENTIFER) || name.equals(SYMBOLIC_OWNER))
             throw new IllegalArgumentException("Property name '" + name + "' is a reserved name");
     }
 
@@ -189,12 +188,12 @@ public final class GraphUtilities
     {
         final String id = getStringRepresentation(om, edgeID);
         final Iterator<Edge> ei = G.getEdges(IDENTIFIER, id).iterator();
-        if(!ei.hasNext())
+        if (!ei.hasNext())
             return null;
 
         final Edge e = ei.next();
 
-        if(ei.hasNext())
+        if (ei.hasNext())
             throw new RuntimeException("Graph inconsistency! More than one edge with (head,label,tail) coordinate "
                     + id); // TODO: Consistently handle these inconsistencies
 
@@ -205,10 +204,10 @@ public final class GraphUtilities
     {
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(toJSON(om, edgeID.tail()).toString())
-                     .append("--")
-                     .append(edgeID.label())
-                     .append("->")
-                     .append(toJSON(om, edgeID.head()).toString());
+                .append("--")
+                .append(edgeID.label())
+                .append("->")
+                .append(toJSON(om, edgeID.head()).toString());
         return stringBuilder.toString();
     }
 
@@ -217,12 +216,12 @@ public final class GraphUtilities
     {
         final String idStr = toJSON(om, id).toString();
         final Iterator<Vertex> vi = G.getVertices(propertyName, idStr).iterator();
-        if(!vi.hasNext())
+        if (!vi.hasNext())
             return null;
 
         final Vertex v = vi.next();
 
-        if(vi.hasNext())
+        if (vi.hasNext())
             throw new RuntimeException("Graph inconsistency! More than one vertex with identifier " + id);
 
         return v;
@@ -283,8 +282,7 @@ public final class GraphUtilities
         {
             final JsonNode node = om.readTree(json);
             return JSONUtilities.fromJSON(node);
-        }
-        catch (IOException e)
+        } catch (IOException e)
         {
             log.trace("Failed to parse ID from string '{}' (should be JSON Array)", json);
             return null;
@@ -301,12 +299,14 @@ public final class GraphUtilities
         setKey(vertex, id);
     }
 
-    public static void setEdgeId(ObjectMapper om, EdgeID edgeID, Edge edge) {
+    public static void setEdgeId(ObjectMapper om, EdgeID edgeID, Edge edge)
+    {
         edge.setProperty(IDENTIFIER, getStringRepresentation(om, edgeID));
         // TODO keys for the edges ?
     }
 
-    private static void setKey(Element element, ID id) {
+    private static void setKey(Element element, ID id)
+    {
         element.setProperty(KEY_INDEX, id.index());
         element.setProperty(KEY_TYPE, id.type());
         element.setProperty(KEY_ID, id.id());
@@ -337,8 +337,7 @@ public final class GraphUtilities
         {
             final JsonNode node = om.readTree(String.valueOf(owner));
             return JSONUtilities.fromJSON(node);
-        }
-        catch (IOException e)
+        } catch (IOException e)
         {
             log.trace("Failed to parse ID from '{}' (should be JSON Array)", String.valueOf(owner));
             return null;
@@ -353,7 +352,7 @@ public final class GraphUtilities
         final Vertex tv = findVertex(om, G, edgeID.tail());
         final Vertex hv = findVertex(om, G, edgeID.head());
 
-        if(tv == null || hv == null)
+        if (tv == null || hv == null)
             throw new RuntimeException("Head or tail of edge doesn't exist!");
 
         final Edge e = G.addEdge(null, tv, hv, edgeID.label());
@@ -379,12 +378,12 @@ public final class GraphUtilities
 
     /**
      * Return true if {@link GraphUtilities#setOwner} can be called on this vertex without violating semantics:
-     *
+     * <p/>
      * You should only set the owner if:
      * <ul>
-     *     <li>The vertex does not have an owner yet</li>
-     *     <li>An older version of your subset owns the vertex</li>
-     *     <li>The vertex is a symbolic vertex ({@code version() == 0})</li>
+     * <li>The vertex does not have an owner yet</li>
+     * <li>An older version of your subset owns the vertex</li>
+     * <li>The vertex is a symbolic vertex ({@code version() == 0})</li>
      * </ul>
      */
     public static boolean isOwnable(ObjectMapper om, final Vertex v, final ID owner)
@@ -436,20 +435,23 @@ public final class GraphUtilities
             return new EdgeID(targetId, id.label(), id.head());
     }
 
-    public static void dumpGraph(ObjectMapper om, Graph graph)
+    public static void logGraph(ObjectMapper om, Graph graph)
     {
-        log.trace("Graph dump start");
-
-        for(Edge e : graph.getEdges())
+        if (log.isTraceEnabled())
         {
-            final EdgeID edgeId = getEdgeID(om, e);
-            if(edgeId == null)
-                log.trace(e.toString());
-            else
-                log.trace(edgeId.toString());
-        }
+            log.trace("Graph dump start");
 
-        log.trace("Graph dump done");
+            for (Edge e : graph.getEdges())
+            {
+                final EdgeID edgeId = getEdgeID(om, e);
+                if (edgeId == null)
+                    log.trace(e.toString());
+                else
+                    log.trace(edgeId.toString());
+            }
+
+            log.trace("Graph dump done");
+        }
     }
 
     public static void makeSymbolic(ObjectMapper om, Vertex vertex)
@@ -458,13 +460,15 @@ public final class GraphUtilities
         setID(om, vertex, symbolicID);
         setOwner(om, vertex, symbolicID);
 
-        for (Edge edge : vertex.getEdges(Direction.IN)) {
+        for (Edge edge : vertex.getEdges(Direction.IN))
+        {
             EdgeID id = getEdgeID(om, edge);
             EdgeID idWithSymbolicHead = new EdgeID(id.tail(), id.label(), symbolicID);
             setEdgeId(om, idWithSymbolicHead, edge);
         }
 
-        for (Edge edge : vertex.getEdges(Direction.OUT)) {
+        for (Edge edge : vertex.getEdges(Direction.OUT))
+        {
             EdgeID id = getEdgeID(om, edge);
             EdgeID idWithSymbolicHead = new EdgeID(symbolicID, id.label(), id.head());
             setEdgeId(om, idWithSymbolicHead, edge);

@@ -197,7 +197,7 @@ public class DegraphmalizerTest
             }
         }
 
-        GraphUtilities.dumpGraph(new ObjectMapper(), ln.G);
+        GraphUtilities.logGraph(new ObjectMapper(), ln.G);
         // Cleanup index
         if (!ln.es.admin().indices().delete(new DeleteIndexRequest(idx)).actionGet().acknowledged()) {
             throw new RuntimeException("failed to delete index " + target);
@@ -254,7 +254,7 @@ public class DegraphmalizerTest
             ln.log.info("Degraphmalize complete for : "+result.root());
         }
 
-        GraphUtilities.dumpGraph(new ObjectMapper(), ln.G);
+        GraphUtilities.logGraph(new ObjectMapper(), ln.G);
 
         actions.clear();
         actions.add(ln.d.degraphmalize(DegraphmalizeRequestType.DELETE, DegraphmalizeRequestScope.DOCUMENT_ANY_VERSION, new ID(idx, tp, id, 0), ln.callback));

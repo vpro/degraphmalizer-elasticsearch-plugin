@@ -374,8 +374,6 @@ public class Degraphmalizer implements Degraphmalizr
 
     private void generateSubgraph(DegraphmalizeRequest action, JsonNode document)
     {
-        GraphUtilities.dumpGraph(objectMapper, graph);
-
         // extract the graph elements
         final ArrayList<Subgraph> sgs = new ArrayList<Subgraph>();
         for (TypeConfig c : action.configs())
@@ -401,8 +399,6 @@ public class Degraphmalizer implements Degraphmalizr
 
         subgraphmanager.commitSubgraph(action.id(), merged);
         log.info("Committed subgraph to graph");
-
-        GraphUtilities.dumpGraph(objectMapper, graph);
     }
 
     private List<Future<RecomputeResult>> recomputeAffectedDocuments(List<RecomputeRequest> recomputeRequests) throws InterruptedException

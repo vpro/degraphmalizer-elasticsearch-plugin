@@ -68,6 +68,6 @@ public class GraphBuilder implements GraphBuilderMBean
 
     @Override
     public final void dumpGraph() {
-        GraphUtilities.dumpGraph(om, graph);
+        GraphUtilities.logGraph(om, graph);
     }
 }
