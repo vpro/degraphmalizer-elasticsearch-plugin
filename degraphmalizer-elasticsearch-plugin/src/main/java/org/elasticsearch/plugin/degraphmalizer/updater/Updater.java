@@ -122,7 +122,7 @@ public final class Updater implements Runnable {
                 LOG.warn("Request {} {} was not successful. Response status code: {}.", request.getMethod(), request.getURI(), response.getStatusLine().getStatusCode());
                 retry(change);
             } else {
-                LOG.debug("Change performed: {}", change);
+                LOG.debug("Change performed: {} : {}", index, change);
             }
 
             EntityUtils.consume(response.getEntity());
