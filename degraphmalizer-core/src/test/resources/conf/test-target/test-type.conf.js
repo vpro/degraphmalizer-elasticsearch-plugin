@@ -28,7 +28,13 @@
                 "nodes-in": {
                     nested: true,
                     reduce: (function(doc_tree) {
-                        return {"full_tree": doc_tree, "walk_direction": "inwards"};
+                        var children=[];
+                        for (child in Iterator(doc_tree.children())) {
+                            children.push(child.value().document);
+                        }
+                        var tree = {};
+                        tree["_children"]=children;
+                        return {"full_tree": tree , "walk_direction": "inwards"};
                     })
                 }
             }
@@ -39,7 +45,13 @@
                 "nodes-out": {
                     nested: true,
                     reduce: (function(doc_tree) {
-                        return {"full_tree": doc_tree, "walk_direction": "outwards"};
+                        var children=[];
+                        for (child in Iterator(doc_tree.children())) {
+                            children.push(child.value().document);
+                        }
+                        var tree = {};
+                        tree["_children"]=children;
+                        return {"full_tree": tree , "walk_direction": "outwards"};
                     })
                 }
             }

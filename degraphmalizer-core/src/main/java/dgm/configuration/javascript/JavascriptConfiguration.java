@@ -3,27 +3,22 @@ package dgm.configuration.javascript;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
-import com.tinkerpop.blueprints.*;
+import com.tinkerpop.blueprints.Direction;
 import dgm.JSONUtilities;
-import dgm.configuration.*;
-import dgm.modules.elasticsearch.ResolvedPathElement;
-import dgm.exceptions.ConfigurationException;
 import dgm.Subgraph;
+import dgm.configuration.*;
+import dgm.exceptions.ConfigurationException;
 import dgm.graphs.Subgraphs;
-import org.elasticsearch.action.get.GetResponse;
+import dgm.modules.elasticsearch.ResolvedPathElement;
+import dgm.trees.Tree;
+import dgm.trees.Trees;
 import org.mozilla.javascript.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import dgm.trees.Tree;
-import dgm.trees.Trees;
 
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
-
-import static dgm.GraphUtilities.toJSON;
 
 /**
  * Load configuration from javascript files in a directory
@@ -485,60 +480,22 @@ class JavascriptPropertyConfig implements PropertyConfig
 	public JsonNode reduce(Tree<ResolvedPathElement> tree)
 	{
 		JsonNode result = null;
-
-        final com.google.common.base.Function<ResolvedPathElement, JsonNode> resultToString = new com.google.common.base.Function<ResolvedPathElement, JsonNode>()
-        {
-            @Override
-            public JsonNode apply(ResolvedPathElement input)
-            {
-                try
-                {
-                    final Optional<GetResponse> getResponse = input.getResponse();
-                    final ObjectNode n = om.createObjectNode();
-
-                    if(getResponse.isPresent())
-                    {
-                        final String getResponseString = getResponse.get().getSourceAsString();
-
-                        n.put("exists", true);
-                        n.put("value", om.readTree(getResponseString));
-                    }
-                    else
-                    {
-                        n.put("exists", false);
-                    }
-
-                    final Edge edge = input.edge();
-                    final Vertex vertex = input.vertex();
-
-                    if (edge != null)
-                        n.put("edge", toJSON(om, edge));
-                    if (vertex != null)
-                        n.put("vertex", toJSON(om, vertex));
-                    return n;
-                }
-                catch (IOException e)
-                {
-                    final ObjectNode n = om.createObjectNode();
-                    n.put("exception", e.getClass().getCanonicalName());
-                    n.put("message", e.getMessage());
-                    return n;
-                }
-            }
-        };
-
-        final Tree<JsonNode> jsonTree = Trees.map(resultToString, tree);
 		
 		try
 		{
-			final Context cx = Context.enter();
+            final Context cx = Context.enter();
 
-            final JsonNode jtree = Trees.toJsonTree(om, jsonTree);
-
-            final Object jsobject = JSONUtilities.toJSONObject(cx, scope, jtree.toString());
+            final com.google.common.base.Function<ResolvedPathElement, JavascriptNode> elementToNode = new com.google.common.base.Function<ResolvedPathElement, JavascriptNode>() {
+                @Override
+                public JavascriptNode apply(ResolvedPathElement input)
+                {
+                    return new JavascriptNode(cx, scope, input);
+                }
+            };
+            final Tree<JavascriptNode> javascriptTree = Trees.map(elementToNode, tree);
 
             // call our "reduction" function
-			final Object obj = reduce.call(cx, scope, null, new Object[] { jsobject });
+			final Object obj = reduce.call(cx, scope, null, new Object[] { javascriptTree });
 			
 			// TODO this is inefficient and silly...
 			
@@ -550,12 +507,10 @@ class JavascriptPropertyConfig implements PropertyConfig
 		}
 		catch (JsonProcessingException e)
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		catch (IOException e)
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		finally
