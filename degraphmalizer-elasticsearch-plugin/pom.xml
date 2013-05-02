@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>nl.vpro</groupId>
+        <groupId>nl.vpro.degraphmalizer</groupId>
         <artifactId>degraphmalizer-parent</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
