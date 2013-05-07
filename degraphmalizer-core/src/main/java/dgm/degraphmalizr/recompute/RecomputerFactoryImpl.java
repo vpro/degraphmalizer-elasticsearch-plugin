@@ -160,7 +160,7 @@ public class RecomputerFactoryImpl implements Recomputer
             // retrieve the raw document from ES
             final Optional<ResolvedPathElement> r = queryFn.apply(new Pair<Edge, Vertex>(null, request.root.vertex()));
             if(!r.isPresent() || !r.get().getResponse().isPresent())
-                throw new SourceMissingException();
+                throw new SourceMissingException(request.root.id());
 
             return objectMapper.readTree(r.get().getResponse().get().sourceAsString());
         }
