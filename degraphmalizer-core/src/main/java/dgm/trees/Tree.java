@@ -1,24 +1,24 @@
 package dgm.trees;
 
-/** A tree
- * 
+/**
+ * A tree
+ * <p/>
  * Each node stores a value and a list of child trees.
- * 
+ * <p/>
  * <pre>
  *           .--(value)-->[]
  *          /
  * (value)-+----(value)-->[]   .--(value)-->[]
  *          \                 /
  *           `--(value)------+----(value)-->[]
- * 
+ *
  * </pre>
- * 
- * @author wires
  *
  * @param <A>
+ * @author wires
  */
-public interface Tree<A>
-{
-	A value();
-	Iterable<Tree<A>> children();
+public interface Tree<A> {
+    A value();
+
+    Iterable<Tree<A>> children();
 }
