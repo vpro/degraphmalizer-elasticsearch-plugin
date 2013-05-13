@@ -105,7 +105,14 @@ public class RecomputerFactoryImpl implements Recomputer
 
                 // reduce each property to a value based on the walk result
                 for (final Map.Entry<String, ? extends PropertyConfig> propertyCfg : walkCfg.getValue().properties().entrySet())
-                    walkResults.put(propertyCfg.getKey(), propertyCfg.getValue().reduce(fullTree.get()));
+                {
+                    try {
+                        walkResults.put(propertyCfg.getKey(), propertyCfg.getValue().reduce(fullTree.get()));
+                    } catch (ValueIsAbsentException v) {
+                        isAbsent = true;
+                        break;
+                    }
+                }
             }
 
             // something failed, so we abort the whole re-computation

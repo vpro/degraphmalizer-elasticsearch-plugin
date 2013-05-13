@@ -8,6 +8,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 import dgm.exceptions.UnreachableCodeReachedException;
+import dgm.exceptions.ValueIsAbsentException;
 
 import java.io.PrintStream;
 import java.util.*;
@@ -35,20 +36,21 @@ public final class Trees
 	}
 
     /**
+     * TODO BROKEN: Does not work due to the use of Iterable.transfrom() in map() , which lazy evaluates the apply() function.
+     * TODO BROKEN: Therefore the exception gets thrown on iteration of the tree and not on this call.
+     *
      * Turn a {@code Tree} of {@code Optional}s into a {@code Optional}al {@code Tree}, meaning that if there is one
      * absent value in the tree, the whole tree is absent.
      */
     public static <A> Optional<Tree<A>> optional(Tree<Optional<A>> treeOfOptionals)
     {
-        class ValueIsAbsent extends RuntimeException {}
-
         final Function<Optional<A>, A> nonAbsent = new Function<Optional<A>, A>()
         {
             @Override
             public A apply(Optional<A> input)
             {
                 if(!input.isPresent())
-                    throw new ValueIsAbsent();
+                    throw new ValueIsAbsentException();
 
                 return input.get();
             }
@@ -58,7 +60,7 @@ public final class Trees
         {
             return Optional.of(map(nonAbsent, treeOfOptionals));
         }
-        catch (ValueIsAbsent e)
+        catch (ValueIsAbsentException e)
         {
             return Optional.absent();
         }
