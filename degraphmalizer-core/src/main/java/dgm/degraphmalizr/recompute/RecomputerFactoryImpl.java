@@ -96,7 +96,7 @@ public class RecomputerFactoryImpl implements Recomputer
                 // if some value is absent from the tree, abort the computation
                 final Optional<Tree<ResolvedPathElement>> fullTree = Trees.optional(docTree);
 
-                // TODO split various failure modes
+                // TODO this does not work at present as Trees.optional behaves 'lazy'
                 if (!fullTree.isPresent())
                 {
                     isAbsent = true;
