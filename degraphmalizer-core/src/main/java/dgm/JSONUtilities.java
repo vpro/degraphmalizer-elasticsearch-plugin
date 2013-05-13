@@ -21,6 +21,14 @@ public final class JSONUtilities
     }
 
     /**
+     * Transform a JSON Node into a JS Object
+     */
+    public static Object toJSONObject(Context cx, Scriptable scope, JsonNode jsonNode)
+    {
+        return toJSONObject(cx, scope, jsonNode.toString());
+    }
+
+    /**
      * Transform a JSON string into a JS Object
      */
     public static Object toJSONObject(Context cx, Scriptable scope, String json)

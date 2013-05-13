@@ -29,7 +29,7 @@
                     nested: true,
                     reduce: (function(doc_tree) {
                         var children=[];
-                        for (child in Iterator(doc_tree.children())) {
+                        for (var child in Iterator(doc_tree.children())) {
                             children.push(child.value().document);
                         }
                         var tree = {};
@@ -46,7 +46,7 @@
                     nested: true,
                     reduce: (function(doc_tree) {
                         var children=[];
-                        for (child in Iterator(doc_tree.children())) {
+                        for (var child in Iterator(doc_tree.children())) {
                             children.push(child.value().document);
                         }
                         var tree = {};

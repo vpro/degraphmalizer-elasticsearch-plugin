@@ -379,7 +379,8 @@ public class Degraphmalizer implements Degraphmalizr
         for (TypeConfig c : action.configs())
         {
             final Subgraph sg = c.extract(document);
-            sgs.add(sg);
+            if (sg!=null)
+                sgs.add(sg);
 
             if (log.isDebugEnabled())
             {
