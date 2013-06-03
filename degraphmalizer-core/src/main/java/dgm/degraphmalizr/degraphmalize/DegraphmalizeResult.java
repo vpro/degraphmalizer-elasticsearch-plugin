@@ -29,6 +29,6 @@ public class DegraphmalizeResult
 
     @Override
     public final String toString() {
-        return root.toString()+", result count ="+results.size();
+        return root.toString()+", result count = "+results.size();
     }
 }
