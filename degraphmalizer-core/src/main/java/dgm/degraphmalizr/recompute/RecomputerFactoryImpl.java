@@ -174,7 +174,7 @@ public class RecomputerFactoryImpl implements Recomputer
 
         public RecomputeResult recompute() throws IOException, ExecutionException, InterruptedException
         {
-            log.info("Recompute {} started", request.root.id().toString());
+            log.debug("Recompute {} started", request.root.id().toString());
 
             // ideally, this is handled in a monad, but with this boolean we keep track of failures
             boolean isAbsent = false;
@@ -186,7 +186,7 @@ public class RecomputerFactoryImpl implements Recomputer
             // - Return when this document does not need to be processed.
             if (!request.config.filter(rawDocument))
             {
-                log.info("Aborted recompute for {} because filter=false for this document", request.root.id().toString());
+                log.debug("Aborted recompute for {} because filter=false for this document", request.root.id().toString());
                 throw new DocumentFiltered();
             }
 
@@ -226,7 +226,7 @@ public class RecomputerFactoryImpl implements Recomputer
             // write the result document to the target index
             final IndexResponse ir = writeToES(document);
 
-            log.info("Recompute completed for {}, wrote /{}/{}/{}/{}",
+            log.debug("Recompute completed for {}, wrote /{}/{}/{}/{}",
                     new Object[]{request.root.id().toString(), ir.index(), ir.type(), ir.id(), ir.version()});
 
             return new RecomputeResult(ir, rawDocument, document, walkResults);

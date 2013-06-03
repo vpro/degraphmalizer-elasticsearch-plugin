@@ -40,13 +40,14 @@ public class Handler extends SimpleChannelHandler
             @Override
             public void started(DegraphmalizeRequest request)
             {
-                log.info("Started degraphmalization");
+                log.info("Started degraphmalization for ", request);
             }
 
             @Override
             public void complete(DegraphmalizeResult result)
             {
                 // write completion message and close channel
+                log.info("Completed degraphmalization for ", result);
                 ctx.getChannel().write(result).addListener(ChannelFutureListener.CLOSE);
             }
 

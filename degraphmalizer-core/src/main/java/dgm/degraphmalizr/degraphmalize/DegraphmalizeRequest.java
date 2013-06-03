@@ -42,4 +42,9 @@ public class DegraphmalizeRequest {
     public Iterable<TypeConfig> configs() {
         return configs;
     }
+
+    @Override
+    public final String toString() {
+        return requestType.name()+", "+requestScope.name()+", "+id.toString();
+    }
 }
