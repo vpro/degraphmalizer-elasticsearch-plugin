@@ -262,18 +262,24 @@ public class Degraphmalizer implements Degraphmalizr
 
     private void logRecomputes(ID id, List<RecomputeRequest> recomputeRequests)
     {
-        // fn = toString . id . root
-        final Function<RecomputeRequest, String> fn = new Function<RecomputeRequest, String>()
+        if (log.isDebugEnabled()) {
+            // fn = toString . id . root
+            final Function<RecomputeRequest, String> fn = new Function<RecomputeRequest, String>()
+            {
+                @Override public String apply(@Nullable RecomputeRequest input) {
+                    return "\n\t" + input.root.id().toString();
+                }
+            };
+
+            // intercalate "," $ map fn recomputeRequests
+            final String ids = Joiner.on("").join(Lists.transform(recomputeRequests, fn));
+
+            log.debug("Degraphmalize request for {} triggered compute of: {}", id, ids);
+        }
+        else
         {
-            @Override public String apply(@Nullable RecomputeRequest input) {
-                return "\n\t" + input.root.id().toString();
-            }
-        };
-
-        // intercalate "," $ map fn recomputeRequests
-        final String ids = Joiner.on("").join(Lists.transform(recomputeRequests, fn));
-
-        log.info("Degraphmalize request for {} triggered compute of: {}", id, ids);
+            log.info("Degraphmalize request for {} triggered {} computes", id, recomputeRequests.size());
+        }
     }
 
     private DegraphmalizeRequest createDocumentRequestForVertex(DegraphmalizeRequestType degraphmalizeRequestType, Vertex vertex)
