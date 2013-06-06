@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 import dgm.modules.bindingannotations.Degraphmalizes;
 import dgm.modules.bindingannotations.Fetches;
 import dgm.modules.bindingannotations.Recomputes;
+import dgm.modules.elasticsearch.DocumentProvider;
 import dgm.modules.elasticsearch.QueryFunction;
 
 import java.util.concurrent.*;
@@ -21,6 +22,7 @@ public class ThreadpoolModule extends AbstractModule
     @Override
     protected final void configure()
     {
+        bind(DocumentProvider.class).asEagerSingleton();
         bind(QueryFunction.class);
     }
 
