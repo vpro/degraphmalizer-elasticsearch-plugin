@@ -1,10 +1,15 @@
 package dgm.trees2;
 
-import com.google.common.base.Function;
-import com.tinkerpop.blueprints.*;
-import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
 import dgm.trees.*;
+
 import org.testng.annotations.Test;
+
+import com.google.common.base.Function;
+import com.tinkerpop.blueprints.Direction;
+import com.tinkerpop.blueprints.Edge;
+import com.tinkerpop.blueprints.Graph;
+import com.tinkerpop.blueprints.Vertex;
+import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
 
 import static org.fest.assertions.Assertions.assertThat;
 
@@ -21,9 +26,9 @@ public class MinimalTreeTest
         final Vertex v2 = g.addVertex(null);
         final Vertex v3 = g.addVertex(null);
 
-        final Edge e1 = g.addEdge(null, v1, v2, "this");
-        final Edge e2 = g.addEdge(null, v2, v3, "is");
-        final Edge e3 = g.addEdge(null, v3, v1, "cyclic");
+        g.addEdge(null, v1, v2, "this");
+        g.addEdge(null, v2, v3, "is");
+        g.addEdge(null, v3, v1, "cyclic");
 
         return new Pair<Graph,Vertex>(g,v1);
     }
@@ -56,7 +61,7 @@ public class MinimalTreeTest
         return new Pair<Graph,Vertex>(g,v1);
     }
 
-    final static String nullSafeToString(final Object o)
+    static String nullSafeToString(final Object o)
     {
         if(o == null)
             return "null";
