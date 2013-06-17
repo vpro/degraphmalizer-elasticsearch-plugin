@@ -117,7 +117,7 @@ class JavascriptIndexConfig implements IndexConfig
             final Context cx = Context.enter();
 
             // create standard ECMA scope
-            buildScope = cx.initStandardObjects(null, true);
+            buildScope = new ImporterTopLevel(cx); //cx.initStandardObjects(null, true);
 
             // load libraries
             for (File lib : libraries)
