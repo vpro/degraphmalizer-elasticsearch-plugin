@@ -1,30 +1,41 @@
 package dgm.degraphmalizr.recompute;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
-import com.google.common.collect.Iterables;
-import com.tinkerpop.blueprints.*;
-import dgm.*;
-import dgm.configuration.*;
-import dgm.exceptions.*;
-import dgm.modules.elasticsearch.QueryFunction;
-import dgm.modules.elasticsearch.ResolvedPathElement;
 import dgm.GraphUtilities;
+import dgm.ID;
+import dgm.configuration.PropertyConfig;
+import dgm.configuration.TypeConfig;
+import dgm.configuration.WalkConfig;
+import dgm.exceptions.*;
 import dgm.modules.bindingannotations.Fetches;
 import dgm.modules.bindingannotations.Recomputes;
-import dgm.trees.*;
+import dgm.modules.elasticsearch.QueryFunction;
+import dgm.modules.elasticsearch.ResolvedPathElement;
+import dgm.trees.Pair;
+import dgm.trees.Tree;
+import dgm.trees.Trees;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+
+import javax.inject.Inject;
+
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
 import org.nnsoft.guice.sli4j.core.InjectLogger;
 import org.slf4j.Logger;
 
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
+import com.google.common.collect.Iterables;
+import com.tinkerpop.blueprints.Edge;
+import com.tinkerpop.blueprints.Graph;
+import com.tinkerpop.blueprints.Vertex;
 
 import static dgm.GraphUtilities.toJSON;
 
@@ -195,7 +206,7 @@ public class RecomputerFactoryImpl implements Recomputer
             // - We convert the tree of vertices to a tree of ElasticSearch documents
             // - We call the reduce() method for this walk, with the tree of documents as argument.
             // - We collect the result.
-            final HashMap<String, JsonNode> walkResults = walkResults();
+            final Map<String, JsonNode> walkResults = walkResults();
             if(walkResults == null)
             {
                 log.info("Aborted recompute for {} because graph is expired for this node", request.root.id().toString());
