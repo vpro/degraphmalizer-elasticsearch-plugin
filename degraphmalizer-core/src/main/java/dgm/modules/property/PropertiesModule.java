@@ -8,6 +8,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.apache.commons.io.IOUtils;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
@@ -34,12 +36,15 @@ public class PropertiesModule extends AbstractModule {
 
     private Properties loadProperties() {
         Properties properties = new Properties();
+		FileInputStream fis = null;
         try {
-            FileInputStream fis = new FileInputStream(config);
+			fis = new FileInputStream(config);
             properties.load(fis);
             return properties;
         } catch(IOException e) {
             throw new RuntimeException(e);
-        }
+        } finally {
+			IOUtils.closeQuietly(fis);
+		}
     }
 }
