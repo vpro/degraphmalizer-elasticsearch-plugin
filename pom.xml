@@ -37,7 +37,7 @@
         <logback.version>1.0.7</logback.version>
         <lucene.version>3.6.0</lucene.version>
         <jcommander.version>1.27</jcommander.version>
-        <jackson.version>2.0.0</jackson.version>
+        <jackson.version>2.2.0</jackson.version>
         <blueprints.version>2.2.0</blueprints.version>
         <commons_io.version>2.4</commons_io.version>
         <guava.version>13.0.1</guava.version>
