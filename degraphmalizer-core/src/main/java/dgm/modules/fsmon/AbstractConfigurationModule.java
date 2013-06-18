@@ -5,11 +5,18 @@ import dgm.configuration.javascript.JavascriptConfiguration;
 import dgm.exceptions.ConfigurationException;
 import dgm.modules.ServiceModule;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
@@ -20,6 +27,9 @@ import com.google.inject.name.Names;
  * Base class for all configuration providers
  */
 abstract class AbstractConfigurationModule extends ServiceModule {
+
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractConfigurationModule.class);
+
     final String scriptFolder;
     final List<URL> libraries;
 
@@ -44,9 +54,8 @@ abstract class AbstractConfigurationModule extends ServiceModule {
         return new JavascriptConfiguration(om, new File(scriptFolder), libraries.toArray(new URL[libraries.size()]));
     }
 
-    private static URL[] toFiles(final String[] filenames) {
-        final URL[] fs = new URL[filenames.length];
-        int i = 0;
+    private static URL[] toFiles(String... filenames) {
+        List<URL> result = new ArrayList<URL>();
         for (final String fn : filenames) {
             try {
 
@@ -54,18 +63,32 @@ abstract class AbstractConfigurationModule extends ServiceModule {
                 if (f == null) {
                     f = new URL(fn);
                 }
-
-                if (!f.getFile().endsWith(".js")) {
-                    throw new ConfigurationException("Will only load .js files");
+                if (f.getPath().replaceAll(".*/", "").equals("INDEX")) {
+                    LOG.info("Reading index file {}", f);
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(f.openStream()));
+                    String line = reader.readLine();
+                    while (line != null) {
+                        line = line.trim();
+                        if (line.startsWith("#") || line.length() == 0) {
+                            continue;
+                        }
+                        result.addAll(Arrays.asList(toFiles(line)));
+                        line = reader.readLine();
+                    }
+                } else {
+                    if (!f.getFile().endsWith(".js")) {
+                        throw new ConfigurationException("Will only load .js files");
+                    }
+                    result.add(f);
                 }
-                fs[i] = f;
             } catch (MalformedURLException mfe) {
 
                 throw new ConfigurationException(mfe.getMessage());
+            } catch (IOException e) {
+                throw new ConfigurationException(e.getMessage());
             }
-            i++;
         }
 
-        return fs;
+        return result.toArray(new URL[result.size()]);
     }
 }
