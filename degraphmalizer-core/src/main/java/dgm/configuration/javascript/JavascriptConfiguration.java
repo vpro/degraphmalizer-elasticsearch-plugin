@@ -26,8 +26,7 @@ import com.tinkerpop.blueprints.Direction;
 /**
  * Load configuration from javascript files in a directory
  */
-public class JavascriptConfiguration implements Configuration
-{
+public class JavascriptConfiguration implements Configuration {
     public static final String FIXTURES_DIR_NAME = "fixtures";
 
     private final Map<String, JavascriptIndexConfig> indices = new HashMap<String, JavascriptIndexConfig>();
@@ -35,28 +34,24 @@ public class JavascriptConfiguration implements Configuration
 
     private static final Logger LOG = LoggerFactory.getLogger(JavascriptConfiguration.class);
 
-    static
-    {
+    static {
         ContextFactory.initGlobal(new JavascriptContextFactory());
     }
 
 
-    public JavascriptConfiguration(ObjectMapper om, File directory, URL... libraries) throws IOException
-    {
+    public JavascriptConfiguration(ObjectMapper om, File directory, URL... libraries) throws IOException {
         final File[] directories = directory.listFiles();
         if (directories == null)
             throw new ConfigurationException("Configuration directory " + directory.getCanonicalPath() + " does not exist");
 
-        for (File dir : directories)
-        {
+        for (File dir : directories) {
             // skip non directories
             if (!dir.isDirectory())
                 continue;
 
             // each subdirectory encodes an index
             final String dirname = dir.getName();
-            if (FIXTURES_DIR_NAME.equals(dirname))
-            {
+            if (FIXTURES_DIR_NAME.equals(dirname)) {
                 fixtureConfig = new JavascriptFixtureConfiguration(dir);
                 LOG.debug(fixtureConfig.toString());
             } else
@@ -65,24 +60,19 @@ public class JavascriptConfiguration implements Configuration
     }
 
     @Override
-    public Map<String, ? extends IndexConfig> indices()
-    {
+    public Map<String, ? extends IndexConfig> indices() {
         return indices;
     }
 
     @Override
-    public FixtureConfiguration getFixtureConfiguration()
-    {
+    public FixtureConfiguration getFixtureConfiguration() {
         return fixtureConfig;
     }
 
-    private static class JavascriptContextFactory extends ContextFactory
-    {
+    private static class JavascriptContextFactory extends ContextFactory {
         @Override
-        public boolean hasFeature(Context context, int featureIndex)
-        {
-            switch (featureIndex)
-            {
+        public boolean hasFeature(Context context, int featureIndex) {
+            switch (featureIndex) {
                 case Context.FEATURE_STRICT_MODE:
                     return true;
                 case Context.FEATURE_DYNAMIC_SCOPE:
@@ -94,8 +84,7 @@ public class JavascriptConfiguration implements Configuration
 }
 
 
-class JavascriptIndexConfig implements IndexConfig
-{
+class JavascriptIndexConfig implements IndexConfig {
     private static final Logger LOG = LoggerFactory.getLogger(JavascriptIndexConfig.class);
 
     final String index;
@@ -108,15 +97,12 @@ class JavascriptIndexConfig implements IndexConfig
      *
      * @param index     The elastic search index to write to
      * @param directory Directory to watch for files
-     * @throws IOException
      */
-    public JavascriptIndexConfig(ObjectMapper om, String index, File directory, URL... libraries) throws IOException
-    {
+    public JavascriptIndexConfig(ObjectMapper om, String index, File directory, URL... libraries) throws IOException {
         this.index = index;
         ScriptableObject buildScope = null;
 
-        try
-        {
+        try {
             final Context cx = Context.enter();
 
             // create standard ECMA scope
@@ -132,11 +118,9 @@ class JavascriptIndexConfig implements IndexConfig
             buildScope.sealObject();
 
             // non recursively load all configuration files
-            final FilenameFilter filenameFilter = new FilenameFilter()
-            {
+            final FilenameFilter filenameFilter = new FilenameFilter() {
                 @Override
-                public boolean accept(File dir, String name)
-                {
+                public boolean accept(File dir, String name) {
                     if (name.endsWith(".conf.js"))
                         return true;
                     LOG.warn("File [{}] in config dir [{}] has wrong name format and is ignored. Proper format: [target type].conf.js", name, dir.getAbsolutePath());
@@ -147,8 +131,7 @@ class JavascriptIndexConfig implements IndexConfig
             final File[] configFiles = directory.listFiles(filenameFilter);
             if (configFiles == null)
                 throw new ConfigurationException("Configuration directory " + directory.getCanonicalPath() + " can not be read");
-            for (File file : configFiles)
-            {
+            for (File file : configFiles) {
                 LOG.debug("Found config file [{}] for index [{}]", file.getCanonicalFile(), index);
                 final Reader reader = new FileReader(file);
                 final String fn = file.getCanonicalPath();
@@ -161,8 +144,7 @@ class JavascriptIndexConfig implements IndexConfig
 
             // Seal the configuration.
             buildScope.sealObject();
-        } finally
-        {
+        } finally {
             Context.exit();
         }
 
@@ -171,26 +153,22 @@ class JavascriptIndexConfig implements IndexConfig
 
 
     @Override
-    public String name()
-    {
+    public String name() {
         return index;
     }
 
     @Override
-    public Map<String, ? extends TypeConfig> types()
-    {
+    public Map<String, ? extends TypeConfig> types() {
         return types;
     }
 
-    private Object compile(Context cx, Scriptable scope, Reader reader, String fn) throws IOException
-    {
+    private Object compile(Context cx, Scriptable scope, Reader reader, String fn) throws IOException {
         // compile and execute into the scope
         return cx.compileReader(reader, fn, 0, null).exec(cx, scope);
     }
 
 
-    private Object loadLib(Context cx, Scriptable scope, URL f) throws IOException
-    {
+    private Object loadLib(Context cx, Scriptable scope, URL f) throws IOException {
         // load file from filesystem
         final Reader reader = new InputStreamReader(f.openStream(), "UTF-8");
         Object object = compile(cx, scope, reader, f.getFile());
@@ -199,14 +177,12 @@ class JavascriptIndexConfig implements IndexConfig
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "JavascriptIndexConfig(index=" + index + ")";
     }
 }
 
-class JavascriptTypeConfig implements TypeConfig
-{
+class JavascriptTypeConfig implements TypeConfig {
     private static final Logger LOG = LoggerFactory.getLogger(JavascriptTypeConfig.class);
     final IndexConfig indexConfig;
     final String type;
@@ -224,8 +200,7 @@ class JavascriptTypeConfig implements TypeConfig
 
     final Map<String, WalkConfig> walks = new HashMap<String, WalkConfig>();
 
-    public JavascriptTypeConfig(ObjectMapper objectMapper, String type, Scriptable scope, Scriptable script, IndexConfig indexConfig) throws IOException
-    {
+    public JavascriptTypeConfig(ObjectMapper objectMapper, String type, Scriptable scope, Scriptable script, IndexConfig indexConfig) throws IOException {
         this.objectMapper = objectMapper;
         this.type = type;
         this.scope = scope;
@@ -234,8 +209,7 @@ class JavascriptTypeConfig implements TypeConfig
 
         LOG.debug("Creating config for type [{}] in index [{}]", type, indexConfig.name());
 
-        try
-        {
+        try {
             Context.enter();
 
             // filter & graph extraction functions
@@ -249,10 +223,8 @@ class JavascriptTypeConfig implements TypeConfig
 
             // add the walks
             final Scriptable walks = (Scriptable) fetchObjectOrNull("walks");
-            if (walks != null)
-            {
-                for (Object id : ScriptableObject.getPropertyIds(walks))
-                {
+            if (walks != null) {
+                for (Object id : ScriptableObject.getPropertyIds(walks)) {
                     final String walkName = id.toString();
 
                     // get the walk object
@@ -266,19 +238,16 @@ class JavascriptTypeConfig implements TypeConfig
 
                     this.walks.put(walkName, walkCfg);
                 }
-            } else
-            {
+            } else {
                 LOG.debug("No walks found in configuration");
             }
-        } finally
-        {
+        } finally {
 
             Context.exit();
         }
     }
 
-    private Object fetchObjectOrNull(String field)
-    {
+    private Object fetchObjectOrNull(String field) {
         final Object obj = ScriptableObject.getProperty(script, field);
 
         // field not specified in script
@@ -290,26 +259,22 @@ class JavascriptTypeConfig implements TypeConfig
 
 
     @Override
-    public String name()
-    {
+    public String name() {
         return type;
     }
 
     @Override
-    public Subgraph extract(JsonNode document)
-    {
+    public Subgraph extract(JsonNode document) {
         if (document == null)
             throw new NullPointerException("Must pass in non-null value to extract(..)");
 
-        if (extract == null)
-        {
+        if (extract == null) {
             LOG.debug("Not extracting subgraph because no extract() function is configured");
             return Subgraphs.EMPTY_SUBGRAPH;
         }
 
         JavascriptSubgraph sg;
-        try
-        {
+        try {
             final Context cx = Context.enter();
             final Scriptable threadScope = cx.newObject(scope);
             threadScope.setPrototype(scope);
@@ -320,37 +285,31 @@ class JavascriptTypeConfig implements TypeConfig
 
             final Object obj = JSONUtilities.toJSONObject(cx, threadScope, document);
             extract.call(cx, threadScope, threadScope, new Object[]{obj, sg});
-        } finally
-        {
+        } finally {
             Context.exit();
         }
-        if (sg != null)
-        {
+        if (sg != null) {
             return sg.subgraph;
-        } else
-        {
+        } else {
             return null;
         }
     }
 
     @Override
-    public boolean filter(JsonNode document)
-    {
+    public boolean filter(JsonNode document) {
         if (filter == null)
             return true;
 
         boolean result = false;
 
-        try
-        {
+        try {
             final Context cx = Context.enter();
             final Scriptable threadScope = cx.newObject(scope);
             threadScope.setPrototype(scope);
             threadScope.setParentScope(null);
             final Object doc = JSONUtilities.toJSONObject(cx, threadScope, document);
             result = Context.toBoolean(filter.call(cx, threadScope, threadScope, new Object[]{doc}));
-        } finally
-        {
+        } finally {
             Context.exit();
         }
 
@@ -358,17 +317,14 @@ class JavascriptTypeConfig implements TypeConfig
     }
 
     @Override
-    public JsonNode transform(JsonNode document)
-    {
+    public JsonNode transform(JsonNode document) {
 
-        if (transform == null)
-        {
+        if (transform == null) {
             LOG.trace("No transformation function is configured, processing document as-is.");
             return document;
         }
 
-        try
-        {
+        try {
             final Context cx = Context.enter();
             final Scriptable threadScope = cx.newObject(scope);
             threadScope.setPrototype(scope);
@@ -376,55 +332,46 @@ class JavascriptTypeConfig implements TypeConfig
             final Object doc = JSONUtilities.toJSONObject(cx, threadScope, document);
             final Object result = transform.call(cx, threadScope, threadScope, new Object[]{doc});
             return JSONUtilities.fromJSONObject(objectMapper, cx, threadScope, result);
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             //TODO: and what about error handling???
             throw new RuntimeException("Could not transform the input document.", e);
-        } finally
-        {
+        } finally {
             Context.exit();
         }
     }
 
     @Override
-    public IndexConfig index()
-    {
+    public IndexConfig index() {
         return indexConfig;
     }
 
     @Override
-    public String targetType()
-    {
+    public String targetType() {
         return name();
     }
 
     @Override
-    public String sourceIndex()
-    {
+    public String sourceIndex() {
         return sourceIndex;
     }
 
     @Override
-    public String sourceType()
-    {
+    public String sourceType() {
         return sourceType;
     }
 
     @Override
-    public String targetIndex()
-    {
+    public String targetIndex() {
         return index().name();
     }
 
     @Override
-    public Map<String, WalkConfig> walks()
-    {
+    public Map<String, WalkConfig> walks() {
         return walks;
     }
 }
 
-class JavascriptWalkConfig implements WalkConfig
-{
+class JavascriptWalkConfig implements WalkConfig {
     final String walkName;
     final Direction direction;
     final TypeConfig typeCfg;
@@ -433,19 +380,16 @@ class JavascriptWalkConfig implements WalkConfig
     final Map<String, JavascriptPropertyConfig> properties = new HashMap<String, JavascriptPropertyConfig>();
 
 
-    public JavascriptWalkConfig(ObjectMapper om, String walkName, Direction direction, TypeConfig typeCfg, Scriptable scope, Scriptable propertyScriptable)
-    {
+    public JavascriptWalkConfig(ObjectMapper om, String walkName, Direction direction, TypeConfig typeCfg, Scriptable scope, Scriptable propertyScriptable) {
         this.walkName = walkName;
         this.direction = direction;
         this.typeCfg = typeCfg;
 
-        try
-        {
+        try {
             Context.enter();
 
             // add all the properties
-            for (Object id : ScriptableObject.getPropertyIds(propertyScriptable))
-            {
+            for (Object id : ScriptableObject.getPropertyIds(propertyScriptable)) {
                 final String propertyName = id.toString();
                 final Scriptable property = (Scriptable) ScriptableObject.getProperty(propertyScriptable, propertyName);
 
@@ -454,40 +398,34 @@ class JavascriptWalkConfig implements WalkConfig
 
                 this.properties.put(propertyName, new JavascriptPropertyConfig(om, propertyName, nested, reduce, scope, this));
             }
-        } finally
-        {
+        } finally {
             Context.exit();
         }
     }
 
     @Override
-    public Direction direction()
-    {
+    public Direction direction() {
         return direction;
     }
 
     @Override
-    public TypeConfig type()
-    {
+    public TypeConfig type() {
         return typeCfg;
     }
 
     @Override
-    public Map<String, ? extends PropertyConfig> properties()
-    {
+    public Map<String, ? extends PropertyConfig> properties() {
         return properties;
     }
 
     @Override
-    public String name()
-    {
+    public String name() {
         return walkName;
     }
 }
 
 
-class JavascriptPropertyConfig implements PropertyConfig
-{
+class JavascriptPropertyConfig implements PropertyConfig {
     final String name;
     final boolean nested;
     final Function reduce;
@@ -498,8 +436,7 @@ class JavascriptPropertyConfig implements PropertyConfig
     private static final Logger log = LoggerFactory.getLogger(JavascriptPropertyConfig.class);
 
 
-    public JavascriptPropertyConfig(ObjectMapper om, String name, boolean nested, Function reduce, Scriptable scope, WalkConfig walkConfig)
-    {
+    public JavascriptPropertyConfig(ObjectMapper om, String name, boolean nested, Function reduce, Scriptable scope, WalkConfig walkConfig) {
         this.om = om;
         this.nested = nested;
         this.name = name;
@@ -509,28 +446,23 @@ class JavascriptPropertyConfig implements PropertyConfig
     }
 
     @Override
-    public String name()
-    {
+    public String name() {
         return this.name;
     }
 
     @Override
-    public JsonNode reduce(Tree<ResolvedPathElement> tree)
-    {
+    public JsonNode reduce(Tree<ResolvedPathElement> tree) {
         JsonNode result = null;
 
-        try
-        {
+        try {
             final Context cx = Context.enter();
             final Scriptable threadScope = cx.newObject(scope);
             threadScope.setPrototype(scope);
             threadScope.setParentScope(null);
 
-            final com.google.common.base.Function<ResolvedPathElement, JavascriptNode> elementToNode = new com.google.common.base.Function<ResolvedPathElement, JavascriptNode>()
-            {
+            final com.google.common.base.Function<ResolvedPathElement, JavascriptNode> elementToNode = new com.google.common.base.Function<ResolvedPathElement, JavascriptNode>() {
                 @Override
-                public JavascriptNode apply(ResolvedPathElement input)
-                {
+                public JavascriptNode apply(ResolvedPathElement input) {
                     return new JavascriptNode(threadScope, input);
                 }
             };
@@ -538,14 +470,11 @@ class JavascriptPropertyConfig implements PropertyConfig
             final Object reduceResult = reduce.call(cx, threadScope, null, new Object[]{javascriptTree});
 
             result = JSONUtilities.fromJSONObject(om, cx, threadScope, reduceResult);
-        } catch (JsonProcessingException e)
-        {
+        } catch (JsonProcessingException e) {
             e.printStackTrace();
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
-        } finally
-        {
+        } finally {
             Context.exit();
         }
 
@@ -553,8 +482,7 @@ class JavascriptPropertyConfig implements PropertyConfig
     }
 
     @Override
-    public WalkConfig walk()
-    {
+    public WalkConfig walk() {
         return walkConfig;
     }
 }
