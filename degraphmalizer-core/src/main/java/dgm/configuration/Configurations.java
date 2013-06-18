@@ -1,13 +1,14 @@
 package dgm.configuration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-
 public class Configurations
 {
-    final static private Logger log = LoggerFactory.getLogger(Configurations.class);
+    final static private Logger LOG = LoggerFactory.getLogger(Configurations.class);
 
     /**
      * Find all TypeConfigs with specified source index and source type
@@ -16,14 +17,14 @@ public class Configurations
     {
         StringBuilder logMessage = null;
 
-        if(log.isDebugEnabled())
+        if(LOG.isDebugEnabled())
         {
             logMessage = new StringBuilder("Matching request for /");
             logMessage.append(srcIndex).append("/").append(srcType);
             logMessage.append(" to [");
         }
 
-        final ArrayList<TypeConfig> configs = new ArrayList<TypeConfig>();
+        final List<TypeConfig> configs = new ArrayList<TypeConfig>();
 
         // find all matching configs
         for(IndexConfig i : cfg.indices().values())
@@ -40,7 +41,7 @@ public class Configurations
                 }
 
         if(logMessage != null)
-            log.debug(logMessage.append("]").toString());
+            LOG.debug(logMessage.append("]").toString());
 
         return configs;
     }
