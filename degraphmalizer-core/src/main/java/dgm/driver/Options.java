@@ -1,13 +1,14 @@
 package dgm.driver;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
 import com.beust.jcommander.Parameter;
 
-import java.util.*;
-
-public class Options
-{
-    @Parameter(names = {"-t", "--transport" }, description = "Run against remote ES (host, port, cluster)",
-            arity = 3)
+public class Options {
+    @Parameter(names = {"-t", "--transport"}, description = "Run against remote ES (host, port, cluster)",
+        arity = 3)
     List<String> transport = new ArrayList<String>();
 
     @Parameter(names = {"-d", "--development"}, description = "Run in development mode")
@@ -37,22 +38,20 @@ public class Options
     @Parameter(names = {"-f", "--fixtures"}, description = "Load fixtures on startup")
     boolean fixtures;
 
-    @Parameter(names = {"-l", "--jslib"}, description = "Load Javascript library from this file")
+    @Parameter(names = {"-l", "--jslib"}, description = "Load Javascript library from this resource if its name ends with '.js'. If the resource is not on the class path, it will be interpreted as an URL. So to load a file it should start with file://.  If the name of the resource is  INDEX, it will interpret every line of the file as another library to load")
     List<String> libraries = new ArrayList<String>();
 
     @Parameter(names = {"-?", "--help"}, description = "Show command line options", help = true)
     boolean help;
 
-    public Options()
-    {
+    public Options() {
         this(System.getProperties());
     }
 
     /**
      * You can pass the system properties here, this will then be used as defaults that can be overridden using the CLI.
      */
-    public Options(Properties properties)
-    {
+    public Options(Properties properties) {
         port = Integer.parseInt(properties.getProperty("degraphmalizer.port", "9821"));
         bindhost = properties.getProperty("degraphmalizer.host");
 
@@ -72,8 +71,7 @@ public class Options
     /**
      * Get array of javascript library file names.
      */
-    public String[] libraries()
-    {
+    public String[] libraries() {
         return libraries.toArray(new String[libraries.size()]);
     }
 }
