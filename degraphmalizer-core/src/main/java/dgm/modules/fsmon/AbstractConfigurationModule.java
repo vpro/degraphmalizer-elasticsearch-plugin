@@ -75,6 +75,7 @@ abstract class AbstractConfigurationModule extends ServiceModule {
                         result.addAll(Arrays.asList(toFiles(line)));
                         line = reader.readLine();
                     }
+                    reader.close();
                 } else {
                     if (!f.getFile().endsWith(".js")) {
                         throw new ConfigurationException("Will only load .js files");
