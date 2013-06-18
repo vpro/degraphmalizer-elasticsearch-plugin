@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,17 +66,24 @@ abstract class AbstractConfigurationModule extends ServiceModule {
                 }
                 if (f.getPath().replaceAll(".*/", "").equals("INDEX")) {
                     LOG.info("Reading index file {}", f);
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(f.openStream()));
-                    String line = reader.readLine();
-                    while (line != null) {
-                        line = line.trim();
-                        if (line.startsWith("#") || line.length() == 0) {
-                            continue;
+                    BufferedReader reader = null;
+                    try {
+                        reader = new BufferedReader(new InputStreamReader(f.openStream()));
+
+                        String line = reader.readLine();
+                        while (line != null) {
+                            line = line.trim();
+                            if (line.startsWith("#") || line.length() == 0) {
+                                continue;
+                            }
+                            result.addAll(Arrays.asList(toFiles(line)));
+                            line = reader.readLine();
                         }
-                        result.addAll(Arrays.asList(toFiles(line)));
-                        line = reader.readLine();
+                    } catch(IOException e){
+                        throw new ConfigurationException(e.getMessage());
+                    } finally {
+                        IOUtils.closeQuietly(reader);
                     }
-                    reader.close();
                 } else {
                     if (!f.getFile().endsWith(".js")) {
                         throw new ConfigurationException("Will only load .js files");
@@ -84,8 +92,6 @@ abstract class AbstractConfigurationModule extends ServiceModule {
                 }
             } catch (MalformedURLException mfe) {
                 throw new ConfigurationException(mfe.getMessage());
-            } catch (IOException e) {
-                throw new ConfigurationException(e.getMessage());
             }
         }
 
