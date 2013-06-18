@@ -1,9 +1,5 @@
 package dgm.modules.fsmon;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Lists;
-import com.google.inject.TypeLiteral;
-import com.google.inject.name.Names;
 import dgm.configuration.Configuration;
 import dgm.configuration.javascript.JavascriptConfiguration;
 import dgm.exceptions.ConfigurationException;
@@ -11,57 +7,62 @@ import dgm.modules.ServiceModule;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
+import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
 
 /**
  * Base class for all configuration providers
  */
-abstract class AbstractConfigurationModule extends ServiceModule
-{
+abstract class AbstractConfigurationModule extends ServiceModule {
     final String scriptFolder;
-    final List<File> libraries;
+    final List<URL> libraries;
 
-    AbstractConfigurationModule(String scriptFolder, String... libraries)
-    {
+    AbstractConfigurationModule(String scriptFolder, String... libraries) {
         this.scriptFolder = scriptFolder;
         this.libraries = Lists.newArrayList(toFiles(libraries));
     }
 
     @Override
-    protected void configure()
-    {
+    protected void configure() {
         // bind paths
         bind(String.class).annotatedWith(Names.named("scriptFolder")).toInstance(scriptFolder);
-        bind(new TypeLiteral<List<File>>(){}).annotatedWith(Names.named("libraryFiles")).toInstance(libraries);
+        bind(new TypeLiteral<List<URL>>() {
+        }).annotatedWith(Names.named("libraryFiles")).toInstance(libraries);
 
         configureModule();
     }
 
     protected abstract void configureModule();
 
-    static Configuration createConfiguration(ObjectMapper om, String scriptFolder, List<File> libraries) throws IOException
-    {
-        return new JavascriptConfiguration(om, new File(scriptFolder), libraries.toArray(new File[libraries.size()]));
+    static Configuration createConfiguration(ObjectMapper om, String scriptFolder, List<URL> libraries) throws IOException {
+        return new JavascriptConfiguration(om, new File(scriptFolder), libraries.toArray(new URL[libraries.size()]));
     }
 
-    static File[] toFiles(final String[] filenames)
-    {
-        final File[] fs = new File[filenames.length];
+    private static URL[] toFiles(final String[] filenames) {
+        final URL[] fs = new URL[filenames.length];
         int i = 0;
-        for(final String fn : filenames)
-        {
-            final File f = new File(fn);
+        for (final String fn : filenames) {
+            try {
 
-            if(!f.getName().endsWith(".js"))
-                throw new ConfigurationException("Will only load .js files");
+                URL f = AbstractConfigurationModule.class.getClassLoader().getResource(fn);
+                if (f == null) {
+                    f = new URL(fn);
+                }
 
-            if(!f.canRead())
-                throw new ConfigurationException("Cannot read from '" + fn + "'");
+                if (!f.getFile().endsWith(".js")) {
+                    throw new ConfigurationException("Will only load .js files");
+                }
+                fs[i] = f;
+            } catch (MalformedURLException mfe) {
 
-            if(!f.isFile())
-                throw new ConfigurationException("'" + fn + "' is not a file");
-
-            fs[i] = f;
+                throw new ConfigurationException(mfe.getMessage());
+            }
             i++;
         }
 

@@ -1,9 +1,5 @@
 package dgm.configuration.javascript;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tinkerpop.blueprints.Direction;
 import dgm.JSONUtilities;
 import dgm.Subgraph;
 import dgm.configuration.*;
@@ -12,13 +8,20 @@ import dgm.graphs.Subgraphs;
 import dgm.modules.elasticsearch.ResolvedPathElement;
 import dgm.trees.Tree;
 import dgm.trees.Trees;
+
+import java.io.*;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.mozilla.javascript.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tinkerpop.blueprints.Direction;
 
 /**
  * Load configuration from javascript files in a directory
@@ -30,7 +33,7 @@ public class JavascriptConfiguration implements Configuration
     private final Map<String, JavascriptIndexConfig> indices = new HashMap<String, JavascriptIndexConfig>();
     private JavascriptFixtureConfiguration fixtureConfig;
 
-    private static final Logger log = LoggerFactory.getLogger(JavascriptConfiguration.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JavascriptConfiguration.class);
 
     static
     {
@@ -38,13 +41,13 @@ public class JavascriptConfiguration implements Configuration
     }
 
 
-    public JavascriptConfiguration(ObjectMapper om, File directory, File... libraries) throws IOException
+    public JavascriptConfiguration(ObjectMapper om, File directory, URL... libraries) throws IOException
     {
         final File[] directories = directory.listFiles();
         if (directories == null)
             throw new ConfigurationException("Configuration directory " + directory.getCanonicalPath() + " does not exist");
 
-        for (File dir : directory.listFiles())
+        for (File dir : directories)
         {
             // skip non directories
             if (!dir.isDirectory())
@@ -55,7 +58,7 @@ public class JavascriptConfiguration implements Configuration
             if (FIXTURES_DIR_NAME.equals(dirname))
             {
                 fixtureConfig = new JavascriptFixtureConfiguration(dir);
-                log.debug(fixtureConfig.toString());
+                LOG.debug(fixtureConfig.toString());
             } else
                 indices.put(dirname, new JavascriptIndexConfig(om, dirname, dir, libraries));
         }
@@ -93,7 +96,7 @@ public class JavascriptConfiguration implements Configuration
 
 class JavascriptIndexConfig implements IndexConfig
 {
-    private static final Logger log = LoggerFactory.getLogger(JavascriptIndexConfig.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JavascriptIndexConfig.class);
 
     final String index;
     final Scriptable scope;
@@ -107,7 +110,7 @@ class JavascriptIndexConfig implements IndexConfig
      * @param directory Directory to watch for files
      * @throws IOException
      */
-    public JavascriptIndexConfig(ObjectMapper om, String index, File directory, File... libraries) throws IOException
+    public JavascriptIndexConfig(ObjectMapper om, String index, File directory, URL... libraries) throws IOException
     {
         this.index = index;
         ScriptableObject buildScope = null;
@@ -120,11 +123,11 @@ class JavascriptIndexConfig implements IndexConfig
             buildScope = new ImporterTopLevel(cx); //cx.initStandardObjects(null, true);
 
             // load libraries
-            for (File lib : libraries)
+            for (URL lib : libraries)
                 loadLib(cx, buildScope, lib);
 
             final Object jsLogger = Context.javaToJS(new JSLogger(), buildScope);
-            ScriptableObject.putProperty(buildScope, "log", jsLogger);
+            ScriptableObject.putProperty(buildScope, "LOG", jsLogger);
             // seal the libraries and the loggers so configurations can't overwrite them.
             buildScope.sealObject();
 
@@ -136,7 +139,7 @@ class JavascriptIndexConfig implements IndexConfig
                 {
                     if (name.endsWith(".conf.js"))
                         return true;
-                    log.warn("File [{}] in config dir [{}] has wrong name format and is ignored. Proper format: [target type].conf.js", name, dir.getAbsolutePath());
+                    LOG.warn("File [{}] in config dir [{}] has wrong name format and is ignored. Proper format: [target type].conf.js", name, dir.getAbsolutePath());
                     return false;
                 }
             };
@@ -146,7 +149,7 @@ class JavascriptIndexConfig implements IndexConfig
                 throw new ConfigurationException("Configuration directory " + directory.getCanonicalPath() + " can not be read");
             for (File file : configFiles)
             {
-                log.debug("Found config file [{}] for index [{}]", file.getCanonicalFile(), index);
+                LOG.debug("Found config file [{}] for index [{}]", file.getCanonicalFile(), index);
                 final Reader reader = new FileReader(file);
                 final String fn = file.getCanonicalPath();
                 final String type = file.getName().replaceFirst(".conf.js", "");
@@ -185,19 +188,14 @@ class JavascriptIndexConfig implements IndexConfig
         return cx.compileReader(reader, fn, 0, null).exec(cx, scope);
     }
 
-    private Object loadLibFromResource(Context cx, Scriptable scope, Class<?> cls, String fn) throws IOException
-    {
-        // get loader relative to this class
-        final Reader reader = new InputStreamReader(cls.getResourceAsStream(fn), "UTF-8");
 
-        return compile(cx, scope, reader, fn);
-    }
-
-    private Object loadLib(Context cx, Scriptable scope, File f) throws IOException
+    private Object loadLib(Context cx, Scriptable scope, URL f) throws IOException
     {
         // load file from filesystem
-        final FileReader reader = new FileReader(f);
-        return compile(cx, scope, reader, f.getName());
+        final Reader reader = new InputStreamReader(f.openStream(), "UTF-8");
+        Object object = compile(cx, scope, reader, f.getFile());
+        LOG.info("Loaded {}", f);
+        return object;
     }
 
     @Override
@@ -209,7 +207,7 @@ class JavascriptIndexConfig implements IndexConfig
 
 class JavascriptTypeConfig implements TypeConfig
 {
-    private static final Logger log = LoggerFactory.getLogger(JavascriptTypeConfig.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JavascriptTypeConfig.class);
     final IndexConfig indexConfig;
     final String type;
     final Scriptable scope;
@@ -234,7 +232,7 @@ class JavascriptTypeConfig implements TypeConfig
         this.script = script;
         this.indexConfig = indexConfig;
 
-        log.debug("Creating config for type [{}] in index [{}]", type, indexConfig.name());
+        LOG.debug("Creating config for type [{}] in index [{}]", type, indexConfig.name());
 
         try
         {
@@ -270,7 +268,7 @@ class JavascriptTypeConfig implements TypeConfig
                 }
             } else
             {
-                log.debug("No walks found in configuration");
+                LOG.debug("No walks found in configuration");
             }
         } finally
         {
@@ -305,7 +303,7 @@ class JavascriptTypeConfig implements TypeConfig
 
         if (extract == null)
         {
-            log.debug("Not extracting subgraph because no extract() function is configured");
+            LOG.debug("Not extracting subgraph because no extract() function is configured");
             return Subgraphs.EMPTY_SUBGRAPH;
         }
 
@@ -365,7 +363,7 @@ class JavascriptTypeConfig implements TypeConfig
 
         if (transform == null)
         {
-            log.trace("No transformation function is configured, processing document as-is.");
+            LOG.trace("No transformation function is configured, processing document as-is.");
             return document;
         }
 

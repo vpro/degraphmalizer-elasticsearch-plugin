@@ -1,20 +1,23 @@
 package dgm.modules.fsmon;
 
+import dgm.configuration.*;
+import dgm.exceptions.ConfigurationException;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+
+import javax.inject.Named;
+
+import org.nnsoft.guice.sli4j.core.InjectLogger;
+import org.slf4j.Logger;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import dgm.configuration.*;
-import dgm.exceptions.ConfigurationException;
-import org.nnsoft.guice.sli4j.core.InjectLogger;
-import org.slf4j.Logger;
-
-import javax.inject.Named;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 
 
 @Singleton
@@ -24,7 +27,7 @@ class ConfigurationReloader implements FilesystemMonitor, Provider<Configuration
     Logger log;
 
     final String scriptFolder;
-    final List<File> libraries;
+    final List<URL> libraries;
     final CachedProvider<Configuration> cachedProvider;
 
     final ConfigurationMonitor configurationMonitor;
@@ -34,7 +37,7 @@ class ConfigurationReloader implements FilesystemMonitor, Provider<Configuration
     @Inject
     public ConfigurationReloader(Set<ConfigurationMonitor> configurationMonitors,
                                  final @Named("scriptFolder") String scriptFolder,
-                                 final @Named("libraryFiles") List<File> libraries) throws IOException
+                                 final @Named("libraryFiles") List<URL> libraries) throws IOException
     {
         this.scriptFolder = scriptFolder;
         this.libraries = libraries;
