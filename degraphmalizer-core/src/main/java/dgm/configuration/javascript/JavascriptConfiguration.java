@@ -273,7 +273,7 @@ class JavascriptTypeConfig implements TypeConfig {
             return Subgraphs.EMPTY_SUBGRAPH;
         }
 
-        JavascriptSubgraph sg;
+        JavascriptSubgraphImpl sg;
         try {
             final Context cx = Context.enter();
             final Scriptable threadScope = cx.newObject(scope);
@@ -281,7 +281,7 @@ class JavascriptTypeConfig implements TypeConfig {
             threadScope.setParentScope(null);
 
             // extract graph components
-            sg = new JavascriptSubgraph(objectMapper, cx, threadScope);
+            sg = new JavascriptSubgraphImpl(objectMapper, cx, threadScope);
 
             final Object obj = JSONUtilities.toJSONObject(cx, threadScope, document);
             extract.call(cx, threadScope, threadScope, new Object[]{obj, sg});
