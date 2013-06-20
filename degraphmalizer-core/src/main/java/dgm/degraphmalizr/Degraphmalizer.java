@@ -31,6 +31,7 @@ import dgm.modules.elasticsearch.QueryFunction;
 import dgm.trees.Pair;
 import dgm.trees.Tree;
 import dgm.trees.Trees;
+import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.Nullable;
@@ -340,6 +341,10 @@ public class Degraphmalizer implements Degraphmalizr
         List<ID> verticesDeleted = ((BlueprintsSubgraphManager) subgraphmanager).findVertexIDsAffectedByDelete(action.id());
 
         subgraphmanager.deleteSubgraph(action.id());
+        for (TypeConfig config : action.configs()) {
+            DeleteRequest request = new DeleteRequest(config.targetIndex(),config.targetType(),action.id().id());
+            client.delete(request).actionGet();
+        }
 
         recomputeRequests = removeDeletedVerticesFromRequest(verticesDeleted, recomputeRequests);
 
