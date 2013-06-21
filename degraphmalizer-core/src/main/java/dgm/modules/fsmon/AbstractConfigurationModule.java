@@ -91,7 +91,7 @@ abstract class AbstractConfigurationModule extends ServiceModule {
                     result.add(f);
                 }
             } catch (MalformedURLException mfe) {
-                throw new ConfigurationException(mfe.getMessage());
+                throw new ConfigurationException(mfe.getMessage(), mfe);
             }
         }
 
