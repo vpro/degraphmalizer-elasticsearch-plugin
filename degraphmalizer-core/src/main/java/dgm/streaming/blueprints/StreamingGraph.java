@@ -1,9 +1,10 @@
 package dgm.streaming.blueprints;
 
-import com.tinkerpop.blueprints.*;
 import dgm.streaming.command.GraphCommand;
 
 import java.util.*;
+
+import com.tinkerpop.blueprints.*;
 
 import static dgm.streaming.command.GraphCommandBuilder.*;
 
@@ -101,6 +102,11 @@ public final class StreamingGraph implements Graph {
     }
 
     @Override
+    public GraphQuery query() {
+        return wrapped.query();
+    }
+
+    @Override
     public void shutdown() {
         wrapped.shutdown();
     }
@@ -157,8 +163,13 @@ public final class StreamingGraph implements Graph {
         }
 
         @Override
-        public Query query() {
+        public VertexQuery query() {
             return wrapped.query();
+        }
+
+        @Override
+        public Edge addEdge(String s, Vertex vertex) {
+            return wrapped.addEdge(s, vertex);
         }
 
         @Override
@@ -175,6 +186,11 @@ public final class StreamingGraph implements Graph {
         public void setProperty(String key, Object value) {
             notifyGraphCommandListeners(updateNodeCommand(node(wrapped.getId().toString()).set(key, value)).build());
             wrapped.setProperty(key, value);
+        }
+
+        @Override
+        public void remove() {
+            wrapped.remove();
         }
 
         /**
@@ -228,6 +244,11 @@ public final class StreamingGraph implements Graph {
             NodeBuilder edgeBuilder = node(wrapped.getId().toString()).set(key, value);
             notifyGraphCommandListeners(updateEdgeCommand(edgeBuilder).build());
             wrapped.setProperty(key, value);
+        }
+
+        @Override
+        public void remove() {
+            wrapped.remove();
         }
 
         @Override

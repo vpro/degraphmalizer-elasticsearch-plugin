@@ -1,9 +1,5 @@
 package dgm.streaming.codec;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.handler.codec.oneone.OneToOneEncoder;
 import dgm.streaming.command.GraphCommand;
 import dgm.streaming.command.GraphNode;
 
@@ -11,6 +7,12 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.handler.codec.oneone.OneToOneEncoder;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class GraphCommandToJsonEncoder extends OneToOneEncoder {
 
