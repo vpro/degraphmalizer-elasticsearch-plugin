@@ -69,14 +69,12 @@ abstract class AbstractConfigurationModule extends ServiceModule {
                     BufferedReader reader = null;
                     try {
                         reader = new BufferedReader(new InputStreamReader(f.openStream()));
-
                         String line = reader.readLine();
                         while (line != null) {
                             line = line.trim();
-                            if (line.startsWith("#") || line.length() == 0) {
-                                continue;
+                            if (line.length() > 0 && !line.startsWith("#")) {
+                                result.addAll(Arrays.asList(toFiles(line)));
                             }
-                            result.addAll(Arrays.asList(toFiles(line)));
                             line = reader.readLine();
                         }
                     } catch(IOException e){
