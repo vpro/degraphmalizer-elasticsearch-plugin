@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,16 +96,22 @@ public class Configurations {
             }
         } else if (f.getPath().replaceAll(".*/", "").equals("INDEX")) {
             LOG.info("Reading index file {}", f);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(f.openStream()));
-            String line = reader.readLine();
-            while (line != null) {
-                line = line.trim();
-                if (line.startsWith("#") || line.length() == 0) {
-                    continue;
+            BufferedReader reader = null;
+            try {
+                reader = new BufferedReader(new InputStreamReader(f.openStream()));
+
+                String line = reader.readLine();
+                while (line != null) {
+                    line = line.trim();
+                    if (line.startsWith("#") || line.length() == 0) {
+                        continue;
+                    }
+                    URL u = new URL(f.getPath().substring(0, f.getPath().length() - "INDEX".length()) + "/" + line);
+                    result.addAll(Arrays.asList(list(u, filter)));
+                    line = reader.readLine();
                 }
-                URL u = new URL(f.getPath().substring(0, f.getPath().length() - "INDEX".length()) + "/" + line);
-                result.addAll(Arrays.asList(list(u, filter)));
-                line = reader.readLine();
+            } finally {
+                IOUtils.closeQuietly(reader);
             }
         } else {
             if (filter != null) {
