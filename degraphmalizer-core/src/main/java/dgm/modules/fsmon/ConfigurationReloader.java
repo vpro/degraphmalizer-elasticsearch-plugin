@@ -85,10 +85,12 @@ class ConfigurationReloader implements FilesystemMonitor, Provider<Configuration
         if (log.isDebugEnabled()) {
             // get new config
             final Configuration cfg = cachedProvider.get();
-            for (final IndexConfig i : cfg.indices().values())
-                for (final TypeConfig t : i.types().values())
+            for (final IndexConfig i : cfg.indices().values()) {
+                for (final TypeConfig t : i.types().values()) {
                     log.debug("Found target configuration /{}/{} --> /{}/{}",
                         new Object[]{t.sourceIndex(), t.sourceType(), i.name(), t.name()});
+                }
+            }
         }
 
         // notify all configuration listeners

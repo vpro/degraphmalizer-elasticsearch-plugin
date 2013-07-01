@@ -5,26 +5,31 @@ import dgm.configuration.Configuration;
 import java.io.IOException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
 import com.google.inject.Provides;
-import com.google.inject.Singleton;
 
 /**
  * Non-reloading javascript configuration
  */
 public class StaticConfiguration extends AbstractConfigurationModule {
+    private Configuration configuration;
+
     public StaticConfiguration(String scriptFolder, String... libraries) {
         super(scriptFolder, libraries);
+        try {
+            configuration = createConfiguration(new ObjectMapper(), scriptFolder, this.libraries);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        //bind(Configuration.class).toProvider(ConfigurationReloader.class);
     }
 
     @Provides
-    @Singleton
-    @Inject
-    final Configuration provideConfiguration(ObjectMapper om) throws IOException {
-        return createConfiguration(om, scriptFolder, libraries);
+    final Configuration provideConfiguration() throws IOException {
+        return configuration;
     }
 
     @Override
     protected void configureModule() {
+
     }
 }
