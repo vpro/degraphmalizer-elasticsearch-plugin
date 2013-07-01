@@ -63,6 +63,9 @@ abstract class AbstractConfigurationModule extends ServiceModule {
             try {
                 URL f = AbstractConfigurationModule.class.getClassLoader().getResource(relative + "/" + fn);
                 if (f == null) {
+                    if (fn.equals("INDEX")) { // no index file can be found, so nothing
+                        break;
+                    }
                     f = new URL(fn);
                 }
                 if (f.getPath().replaceAll(".*/", "").equals("INDEX")) {

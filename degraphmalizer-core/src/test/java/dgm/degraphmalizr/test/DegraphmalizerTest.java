@@ -1,27 +1,28 @@
 package dgm.degraphmalizr.test;
 
 import ch.qos.logback.classic.Level;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.tinkerpop.blueprints.Graph;
-import com.tinkerpop.blueprints.Vertex;
 import dgm.Degraphmalizr;
 import dgm.GraphUtilities;
 import dgm.ID;
 import dgm.degraphmalizr.degraphmalize.*;
 import dgm.degraphmalizr.recompute.RecomputeResult;
 import dgm.exceptions.DegraphmalizerException;
-import dgm.modules.*;
+import dgm.modules.BlueprintsSubgraphManagerModule;
+import dgm.modules.DegraphmalizerModule;
+import dgm.modules.ServiceRunner;
+import dgm.modules.ThreadpoolModule;
 import dgm.modules.elasticsearch.CommonElasticSearchModule;
 import dgm.modules.elasticsearch.nodes.EphemeralES;
 import dgm.modules.fsmon.StaticConfiguration;
 import dgm.modules.neo4j.CommonNeo4j;
 import dgm.modules.neo4j.EphemeralEmbeddedNeo4J;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
@@ -34,11 +35,15 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Iterables;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.tinkerpop.blueprints.Graph;
+import com.tinkerpop.blueprints.Vertex;
 
 import static org.fest.assertions.Assertions.assertThat;
 
@@ -64,12 +69,12 @@ class LocalNode
         modules.add(new CommonElasticSearchModule());
         modules.add(new CommonNeo4j());
         modules.add(new EphemeralEmbeddedNeo4J());
-        modules.add(new StaticConfiguration("src/test/resources/conf/"));
+        modules.add(new StaticConfiguration("conf"));
         modules.add(new Slf4jLoggingModule());
 
         // the injector
         final Injector injector = com.google.inject.Guice.createInjector(modules);
-        
+
         return injector.getInstance(LocalNode.class);
     }
 
