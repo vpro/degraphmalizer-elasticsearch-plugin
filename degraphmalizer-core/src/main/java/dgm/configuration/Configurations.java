@@ -106,7 +106,7 @@ public class Configurations {
                     if (line.startsWith("#") || line.length() == 0) {
                         continue;
                     }
-                    URL u = new URL(f.getPath().substring(0, f.getPath().length() - "INDEX".length()) + "/" + line);
+                    URL u = new URL(f.toString().substring(0, f.toString().length() - "INDEX".length()) + "/" + line);
                     result.addAll(Arrays.asList(list(u, filter)));
                     line = reader.readLine();
                 }

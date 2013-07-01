@@ -1,14 +1,8 @@
 package dgm.configuration.javascript;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dgm.configuration.FixtureConfiguration;
 import dgm.configuration.FixtureIndexConfiguration;
 import dgm.configuration.FixtureTypeConfiguration;
-import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -16,6 +10,14 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * A Fixture config contains a number of mappings of index names to index configurations.
@@ -77,26 +79,31 @@ public class JavascriptFixtureConfiguration implements FixtureConfiguration
         }
     }
 
+    @Override
     public Iterable<String> getIndexNames()
     {
         return indexConfigs.keySet();
     }
 
+    @Override
     public FixtureIndexConfiguration getIndexConfig(String name)
     {
         return indexConfigs.get(name);
     }
 
+    @Override
     public Iterable<String> getExpectedIndexNames()
     {
         return expectedConfigs.keySet();
     }
 
+    @Override
     public FixtureIndexConfiguration getExpectedIndexConfig(String name)
     {
         return expectedConfigs.get(name);
     }
 
+    @Override
     public File getResultsDirectory() {
         return resultsDir;
     }
@@ -122,11 +129,13 @@ class JavascriptFixtureIndexConfiguration implements FixtureIndexConfiguration
             typeConfigs.put(typeDir.getName(), new JavascriptFixtureTypeConfiguration(typeDir));
     }
 
+    @Override
     public Iterable<String> getTypeNames()
     {
         return typeConfigs.keySet();
     }
 
+    @Override
     public FixtureTypeConfiguration getTypeConfig(String name)
     {
         return typeConfigs.get(name);
@@ -161,21 +170,25 @@ class JavascriptFixtureTypeConfiguration implements FixtureTypeConfiguration
         readDocuments(configDir);
     }
 
+    @Override
     public JsonNode getMapping()
     {
         return mapping;
     }
 
+    @Override
     public Iterable<JsonNode> getDocuments()
     {
         return documentsById.values();
     }
 
+    @Override
     public Iterable<String> getDocumentIds()
     {
         return documentsById.keySet();
     }
 
+    @Override
     public JsonNode getDocumentById(String id)
     {
         return documentsById.get(id);

@@ -63,7 +63,7 @@ public class JavascriptConfiguration implements Configuration {
             }
         }
         if (fixtureConfig == null) {
-            throw new IllegalStateException("No fixtures found in " + directory);
+            LOG.warn("No fixtures found in " + directory);
         }
     }
 
@@ -145,7 +145,7 @@ class JavascriptIndexConfig implements IndexConfig {
                 throw new ConfigurationException("Configuration directory " + directory.getCanonicalPath() + " can not be read");
             }
             for (File file : configFiles) {
-                LOG.debug("Found config file [{}] for index [{}]", file.getCanonicalFile(), index);
+                LOG.info("Found config file [{}] for index [{}]", file.getCanonicalFile(), index);
                 final Reader reader = new FileReader(file);
                 final String fn = file.getCanonicalPath();
                 final String type = file.getName().replaceFirst(".conf.js", "");
