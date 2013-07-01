@@ -2,30 +2,27 @@ package dgm.modules.fsmon;
 
 import dgm.configuration.Configuration;
 import dgm.configuration.ConfigurationMonitor;
+
 import org.nnsoft.guice.sli4j.core.InjectLogger;
 import org.slf4j.Logger;
 
-class LoggingConfigurationMonitor implements ConfigurationMonitor
-{
+class LoggingConfigurationMonitor implements ConfigurationMonitor {
     @InjectLogger
     Logger log;
 
     @Override
-    public void configurationChanged(String change)
-    {
+    public void configurationChanged(String change) {
         log.info("Configuration change for index {}", change);
     }
 }
 
 
-class LoggingFilesystemMonitor implements FilesystemMonitor
-{
+class LoggingFilesystemMonitor implements FilesystemMonitor {
     @InjectLogger
     Logger log;
 
     @Override
-    public void directoryChanged(String directory)
-    {
+    public void directoryChanged(String directory) {
         log.info("Filesystem change detected for directory {}", directory);
     }
 }
@@ -33,16 +30,13 @@ class LoggingFilesystemMonitor implements FilesystemMonitor
 /**
  * Monitor the filesystem for changes and then provide a new configuration
  */
-public class DynamicConfiguration extends AbstractConfigurationModule
-{
-    public DynamicConfiguration(String scriptFolder, String... libraries)
-    {
+public class DynamicConfiguration extends AbstractConfigurationModule {
+    public DynamicConfiguration(String scriptFolder, String... libraries) {
         super(scriptFolder, libraries);
     }
 
     @Override
-    protected void configureModule()
-    {
+    protected void configureModule() {
         // setup poller service
         bindService(PollingFilesystemMonitorService.class);
 

@@ -6,7 +6,6 @@ import dgm.exceptions.ConfigurationException;
 import dgm.modules.ServiceModule;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
@@ -36,15 +35,18 @@ abstract class AbstractConfigurationModule extends ServiceModule {
 
     AbstractConfigurationModule(String scriptFolder, String... libraries) {
         this.scriptFolder = scriptFolder;
-        this.libraries = Lists.newArrayList(toFiles(libraries));
+        if (libraries.length == 0) {
+            this.libraries = Lists.newArrayList(toFiles("lib", "INDEX"));
+        } else {
+            this.libraries = Lists.newArrayList(toFiles("lib", libraries));
+        }
     }
 
     @Override
     protected void configure() {
         // bind paths
         bind(String.class).annotatedWith(Names.named("scriptFolder")).toInstance(scriptFolder);
-        bind(new TypeLiteral<List<URL>>() {
-        }).annotatedWith(Names.named("libraryFiles")).toInstance(libraries);
+        bind(new TypeLiteral<List<URL>>(){}).annotatedWith(Names.named("libraryFiles")).toInstance(libraries);
 
         configureModule();
     }
@@ -52,15 +54,14 @@ abstract class AbstractConfigurationModule extends ServiceModule {
     protected abstract void configureModule();
 
     static Configuration createConfiguration(ObjectMapper om, String scriptFolder, List<URL> libraries) throws IOException {
-        return new JavascriptConfiguration(om, new File(scriptFolder), libraries.toArray(new URL[libraries.size()]));
+        return new JavascriptConfiguration(om, scriptFolder, libraries.toArray(new URL[libraries.size()]));
     }
 
-    private static URL[] toFiles(String... filenames) {
+    private static URL[] toFiles(String relative, String... filenames) {
         List<URL> result = new ArrayList<URL>();
         for (final String fn : filenames) {
             try {
-
-                URL f = AbstractConfigurationModule.class.getClassLoader().getResource(fn);
+                URL f = AbstractConfigurationModule.class.getClassLoader().getResource(relative + "/" + fn);
                 if (f == null) {
                     f = new URL(fn);
                 }
@@ -73,7 +74,7 @@ abstract class AbstractConfigurationModule extends ServiceModule {
                         while (line != null) {
                             line = line.trim();
                             if (line.length() > 0 && !line.startsWith("#")) {
-                                result.addAll(Arrays.asList(toFiles(line)));
+                                result.addAll(Arrays.asList(toFiles(relative, line)));
                             }
                             line = reader.readLine();
                         }

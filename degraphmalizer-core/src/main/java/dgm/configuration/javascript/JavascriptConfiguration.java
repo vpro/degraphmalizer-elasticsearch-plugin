@@ -27,37 +27,44 @@ import com.tinkerpop.blueprints.Direction;
  * Load configuration from javascript files in a directory
  */
 public class JavascriptConfiguration implements Configuration {
-    public static final String FIXTURES_DIR_NAME = "fixtures";
+    public static final String FIXTURES_DIR_NAME = "/fixtures/";
+
+    private static final Logger LOG = LoggerFactory.getLogger(JavascriptConfiguration.class);
 
     private final Map<String, JavascriptIndexConfig> indices = new HashMap<String, JavascriptIndexConfig>();
     private JavascriptFixtureConfiguration fixtureConfig;
-
-    private static final Logger LOG = LoggerFactory.getLogger(JavascriptConfiguration.class);
 
     static {
         ContextFactory.initGlobal(new JavascriptContextFactory());
     }
 
+    public JavascriptConfiguration(ObjectMapper om, String directory, URL... libraries) throws IOException {
 
-    public JavascriptConfiguration(ObjectMapper om, File directory, URL... libraries) throws IOException {
-        final File[] directories = directory.listFiles();
-        if (directories == null)
-            throw new ConfigurationException("Configuration directory " + directory.getCanonicalPath() + " does not exist");
+        URL url = getClass().getClassLoader().getResource(directory);
+        if (url == null) {
+            url = new URL(directory);
+        }
 
-        for (File dir : directories) {
-            // skip non directories
-            if (!dir.isDirectory())
-                continue;
-
+        final URL[] directories = Configurations.list(url, Configurations.IS_DIRECTORY);
+        if (directories == null) {
+            throw new ConfigurationException("Configuration directory " + directory + " does not exist");
+        }
+        for (URL dir : directories) {
             // each subdirectory encodes an index
-            final String dirname = dir.getName();
-            if (FIXTURES_DIR_NAME.equals(dirname)) {
-                fixtureConfig = new JavascriptFixtureConfiguration(dir);
+            if (dir.getPath().endsWith(FIXTURES_DIR_NAME)) {
+                fixtureConfig = new JavascriptFixtureConfiguration(new File(dir.getFile()));
                 LOG.debug(fixtureConfig.toString());
-            } else
-                indices.put(dirname, new JavascriptIndexConfig(om, dirname, dir, libraries));
+            } else {
+                String[] dirArray = dir.getPath().split("/");
+                String dirname = dirArray[dirArray.length -1];
+                indices.put(dirname, new JavascriptIndexConfig(om, dirname, new File(dir.getFile()), libraries));
+            }
+        }
+        if (fixtureConfig == null) {
+            throw new IllegalStateException("No fixtures found in " + directory);
         }
     }
+
 
     @Override
     public Map<String, ? extends IndexConfig> indices() {
@@ -81,6 +88,8 @@ public class JavascriptConfiguration implements Configuration {
             return super.hasFeature(context, featureIndex);
         }
     }
+
+
 }
 
 
@@ -108,9 +117,7 @@ class JavascriptIndexConfig implements IndexConfig {
             // create standard ECMA scope
             buildScope = new ImporterTopLevel(cx); //cx.initStandardObjects(null, true);
 
-            // load libraries
-            for (URL lib : libraries)
-                loadLib(cx, buildScope, lib);
+            loadLibs(cx, buildScope, libraries);
 
             final Object jsLogger = Context.javaToJS(new JSLogger(), buildScope);
             ScriptableObject.putProperty(buildScope, "LOG", jsLogger);
@@ -121,16 +128,18 @@ class JavascriptIndexConfig implements IndexConfig {
             final FilenameFilter filenameFilter = new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
-                    if (name.endsWith(".conf.js"))
+                    if (name.endsWith(".conf.js")) {
                         return true;
+                    }
                     LOG.warn("File [{}] in config dir [{}] has wrong name format and is ignored. Proper format: [target type].conf.js", name, dir.getAbsolutePath());
                     return false;
                 }
             };
 
             final File[] configFiles = directory.listFiles(filenameFilter);
-            if (configFiles == null)
+            if (configFiles == null) {
                 throw new ConfigurationException("Configuration directory " + directory.getCanonicalPath() + " can not be read");
+            }
             for (File file : configFiles) {
                 LOG.debug("Found config file [{}] for index [{}]", file.getCanonicalFile(), index);
                 final Reader reader = new FileReader(file);
@@ -168,8 +177,13 @@ class JavascriptIndexConfig implements IndexConfig {
     }
 
 
+    private void loadLibs(Context cx, Scriptable scope, URL... urls) throws IOException {
+        for (URL f : urls) {
+            loadLib(cx, scope, f);
+        }
+    }
+
     private Object loadLib(Context cx, Scriptable scope, URL f) throws IOException {
-        // load file from filesystem
         final Reader reader = new InputStreamReader(f.openStream(), "UTF-8");
         Object object = compile(cx, scope, reader, f.getFile());
         LOG.info("Loaded {}", f);
@@ -265,8 +279,9 @@ class JavascriptTypeConfig implements TypeConfig {
 
     @Override
     public Subgraph extract(JsonNode document) {
-        if (document == null)
+        if (document == null) {
             throw new NullPointerException("Must pass in non-null value to extract(..)");
+        }
 
         if (extract == null) {
             LOG.debug("Not extracting subgraph because no extract() function is configured");
@@ -288,17 +303,14 @@ class JavascriptTypeConfig implements TypeConfig {
         } finally {
             Context.exit();
         }
-        if (sg != null) {
-            return sg.subgraph;
-        } else {
-            return null;
-        }
+        return sg.subgraph;
     }
 
     @Override
     public boolean filter(JsonNode document) {
-        if (filter == null)
+        if (filter == null) {
             return true;
+        }
 
         boolean result = false;
 
@@ -433,7 +445,7 @@ class JavascriptPropertyConfig implements PropertyConfig {
     final WalkConfig walkConfig;
     final ObjectMapper om;
 
-    private static final Logger log = LoggerFactory.getLogger(JavascriptPropertyConfig.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JavascriptPropertyConfig.class);
 
 
     public JavascriptPropertyConfig(ObjectMapper om, String name, boolean nested, Function reduce, Scriptable scope, WalkConfig walkConfig) {
@@ -471,9 +483,9 @@ class JavascriptPropertyConfig implements PropertyConfig {
 
             result = JSONUtilities.fromJSONObject(om, cx, threadScope, reduceResult);
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            LOG.error(e.getMessage(), e);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.error(e.getMessage(), e);
         } finally {
             Context.exit();
         }
