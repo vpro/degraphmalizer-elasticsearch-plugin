@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.mozilla.javascript.*;
+import org.mozilla.javascript.tools.shell.Global;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,8 +115,8 @@ class JavascriptIndexConfig implements IndexConfig {
         try {
             final Context cx = Context.enter();
 
-            // create standard ECMA scope
-            buildScope = new ImporterTopLevel(cx); //cx.initStandardObjects(null, true);
+            // create standard ECMA scope (org.mozilla.javascript.ImporterTopLevel) including some rhino utilities from Global
+            buildScope = new Global(cx); //cx.initStandardObjects(null, true);
 
             loadLibs(cx, buildScope, libraries);
 
