@@ -11,6 +11,7 @@ import dgm.trees.Trees;
 
 import java.io.*;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,7 +41,7 @@ public class JavascriptConfiguration implements Configuration {
     }
 
     public JavascriptConfiguration(ObjectMapper om, String directory, URL... libraries) throws IOException {
-
+        LOG.info("Reading {} with libraries {}", directory, Arrays.asList(libraries));
         URL url = getClass().getClassLoader().getResource(directory);
         if (url == null) {
             url = new URL(directory);
@@ -109,8 +110,10 @@ class JavascriptIndexConfig implements IndexConfig {
      * @param directory Directory to watch for files
      */
     public JavascriptIndexConfig(ObjectMapper om, String index, File directory, URL... libraries) throws IOException {
+
+        LOG.info("ES: {}, directory: {}, libraries {}", new Object[]{index, directory, Arrays.asList(libraries)});
         this.index = index;
-        ScriptableObject buildScope = null;
+        ScriptableObject buildScope;
 
         try {
             final Context cx = Context.enter();

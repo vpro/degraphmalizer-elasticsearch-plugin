@@ -40,6 +40,7 @@ abstract class AbstractConfigurationModule extends ServiceModule {
         } else {
             this.libraries = Lists.newArrayList(toFiles("lib", libraries));
         }
+        LOG.info("Configuration module {}, {}/{}", new Object[] {this, scriptFolder, Arrays.asList(libraries)});
     }
 
     @Override

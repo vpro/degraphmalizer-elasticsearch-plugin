@@ -62,7 +62,7 @@ public final class Main {
         if (!new File(opt.config).isDirectory()) {
             System.out.println("Cannot find configuration directory " + opt.config);
         }
-
+        System.out.println("Configuration directory " + opt.config);
         System.out.println("Automatic configuration reloading: " + (opt.reloading ? "enabled" : "disabled"));
 
         // depending on properties / CLI, load proper modules
