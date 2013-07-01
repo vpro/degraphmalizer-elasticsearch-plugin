@@ -82,7 +82,8 @@ public class Configurations {
                 @Override
                 public boolean accept(File dir, String name) {
                     try {
-                        return new File(dir, name).canRead() && filter.apply(dir.toURI().toURL());
+                        File file = new File(dir, name);
+                        return file.canRead() && filter.apply(file.toURI().toURL());
                     } catch (MalformedURLException e) {
                         LOG.error(e.getMessage(), e);
                         return false;

@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Predicate;
 import com.tinkerpop.blueprints.Direction;
 
 /**
@@ -59,7 +60,7 @@ public class JavascriptConfiguration implements Configuration {
             } else {
                 String[] dirArray = dir.getPath().split("/");
                 String dirname = dirArray[dirArray.length -1];
-                indices.put(dirname, new JavascriptIndexConfig(om, dirname, new File(dir.getFile()), libraries));
+                indices.put(dirname, new JavascriptIndexConfig(om, dirname, dir, libraries));
             }
         }
         if (fixtureConfig == null) {
@@ -109,7 +110,7 @@ class JavascriptIndexConfig implements IndexConfig {
      * @param index     The elastic search index to write to
      * @param directory Directory to watch for files
      */
-    public JavascriptIndexConfig(ObjectMapper om, String index, File directory, URL... libraries) throws IOException {
+    public JavascriptIndexConfig(ObjectMapper om, String index, URL directory, URL... libraries) throws IOException {
 
         LOG.info("ES: {}, directory: {}, libraries {}", new Object[]{index, directory, Arrays.asList(libraries)});
         this.index = index;
@@ -129,26 +130,24 @@ class JavascriptIndexConfig implements IndexConfig {
             buildScope.sealObject();
 
             // non recursively load all configuration files
-            final FilenameFilter filenameFilter = new FilenameFilter() {
+            final Predicate<URL> filenameFilter = new Predicate<URL>() {
                 @Override
-                public boolean accept(File dir, String name) {
-                    if (name.endsWith(".conf.js")) {
-                        return true;
-                    }
-                    LOG.warn("File [{}] in config dir [{}] has wrong name format and is ignored. Proper format: [target type].conf.js", name, dir.getAbsolutePath());
-                    return false;
+                public boolean apply(URL url) {
+                    return url.getFile().endsWith(".conf.js");
+
                 }
             };
 
-            final File[] configFiles = directory.listFiles(filenameFilter);
+            final URL[] configFiles = Configurations.list(directory, filenameFilter);
             if (configFiles == null) {
-                throw new ConfigurationException("Configuration directory " + directory.getCanonicalPath() + " can not be read");
+                throw new ConfigurationException("Configuration directory " + directory + " can not be read");
             }
-            for (File file : configFiles) {
-                LOG.info("Found config file [{}] for index [{}]", file.getCanonicalFile(), index);
-                final Reader reader = new FileReader(file);
-                final String fn = file.getCanonicalPath();
-                final String type = file.getName().replaceFirst(".conf.js", "");
+            LOG.info("{}: Found config files  for index [{}]", directory, Arrays.asList(configFiles));
+            for (URL file : configFiles) {
+                LOG.info("Found config file [{}] for index [{}]", file, index);
+                final Reader reader = new InputStreamReader(file.openStream(), "UTF-8");
+                final String fn = file.toString();
+                final String type = file.getFile().replaceFirst(".conf.js", "");
 
                 final Scriptable typeConfig = (Scriptable) compile(cx, buildScope, reader, fn);
 
