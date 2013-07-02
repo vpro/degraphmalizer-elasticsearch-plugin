@@ -129,7 +129,7 @@ public class DegraphmalizerTest {
 
     @Test
     @Ignore("fails on jenkins, I don't know why")
-    public void fullTest() throws ExecutionException, InterruptedException, DegraphmalizerException {
+    public void ignoreFullTest() throws ExecutionException, InterruptedException, DegraphmalizerException {
         final String target = "test-target";
         final String idx = "test-index";
         final String tp = "test-type";
@@ -198,7 +198,7 @@ public class DegraphmalizerTest {
 
     @Test
     @Ignore("fails on jenkins, I don't know why")
-    public void deleteTest() throws ExecutionException, InterruptedException {
+    public void ignoreDeleteTest() throws ExecutionException, InterruptedException {
         final String target = "test-target";
         final String idx = "test-index";
         final String tp = "test-type";

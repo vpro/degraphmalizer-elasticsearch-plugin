@@ -35,8 +35,9 @@ public class ConfigExtractMergingTest {
         ln = LocalNode.localNode();
         ln.serviceRunner.startServices();
 
-        for (Vertex v : ln.G.getVertices())
+        for (Vertex v : ln.G.getVertices()) {
             ln.G.removeVertex(v);
+        }
         ((TransactionalGraph) ln.G).stopTransaction(TransactionalGraph.Conclusion.SUCCESS);
     }
 
@@ -78,7 +79,7 @@ public class ConfigExtractMergingTest {
 
     @Test
     @Ignore("fails on jenkins, I don't know why")
-    public void mergeExtractFunctionsTest() throws ExecutionException, InterruptedException, DegraphmalizerException {
+    public void ignoreMergeExtractFunctionsTest() throws ExecutionException, InterruptedException, DegraphmalizerException {
         assertThat(ln.G.getEdges()).hasSize(0);
         assertThat(ln.G.getVertices()).hasSize(0);
 
