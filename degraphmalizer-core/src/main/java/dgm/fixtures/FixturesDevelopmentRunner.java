@@ -67,36 +67,49 @@ public class FixturesDevelopmentRunner implements ConfigurationMonitor, Fixtures
 
     @Override
     public void runFixtures() {
-        List<ID> ids;
-        List<String> indexes;
-        List<Pair<ID, Boolean>> verifyResults;
 
         try {
-            indexes = deleteIndexesCommand.execute();
-            LOG.info("Deleted indexes: {}", indexes);
-            indexes = deleteTargetIndexesCommand.execute();
-            LOG.info("Deleted target indexes: {}", indexes);
-            indexes = createIndexesCommand.execute();
-            LOG.info("Created indexes: {}", indexes);
-            indexes = createTargetIndexesCommand.execute();
-            LOG.info("Created target indexes: {}", indexes);
-            ids = insertDocumentsCommand.execute();
-            LOG.info("Inserted {} documents", ids.size());
-            ids = redegraphmalizeCommand.execute();
-            LOG.info("Degraphmalized {} documents", ids.size());
-            ids = writeResultDocumentsCommand.execute();
-            LOG.info("Written {} result documents", ids.size());
-            verifyResults = verifyResultDocumentsCommand.execute();
-            LOG.info("Checked {} result documents", verifyResults.size());
-            int success = 0, failed = 0;
-            for (Pair<ID, Boolean> result : verifyResults) {
-                if (result.b) {
-                    success++;
-                } else {
-                    failed++;
-                }
+            {
+                List<String> indexes = deleteIndexesCommand.execute();
+                LOG.info("Deleted indexes: {}", indexes);
             }
-            LOG.info("Verify results {} good, {} bad ", success, failed);
+            {
+                List<String> indexes = deleteTargetIndexesCommand.execute();
+                LOG.info("Deleted target indexes: {}", indexes);
+            }
+            {
+                List<String> indexes = createIndexesCommand.execute();
+                LOG.info("Created indexes: {}", indexes);
+            }
+            {
+                List<String> indexes = createTargetIndexesCommand.execute();
+                LOG.info("Created target indexes: {}", indexes);
+            }
+            {
+                List<ID> ids = insertDocumentsCommand.execute();
+                LOG.info("Inserted {} documents", ids.size());
+            }
+            {
+                List<ID> ids = redegraphmalizeCommand.execute();
+                LOG.info("Degraphmalized {} documents", ids.size());
+            }
+            {
+                List<ID> ids = writeResultDocumentsCommand.execute();
+                LOG.info("Written {} result documents", ids.size());
+            }
+            {
+                List<Pair<ID, Boolean>> verifyResults = verifyResultDocumentsCommand.execute();
+                LOG.info("Checked {} result documents", verifyResults.size());
+                int success = 0, failed = 0;
+                for (Pair<ID, Boolean> result : verifyResults) {
+                    if (result.b) {
+                        success++;
+                    } else {
+                        failed++;
+                    }
+                }
+                LOG.info("Verify results {} good, {} bad ", success, failed);
+            }
         } catch (Exception e) {
             LOG.error("Fixture run failed: {} ", e.getMessage(), e);
         }
