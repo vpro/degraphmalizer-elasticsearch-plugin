@@ -31,8 +31,8 @@ public class Configurations {
         final List<TypeConfig> configs = new ArrayList<TypeConfig>();
 
         // find all matching configs
-        for (IndexConfig i : cfg.indices().values())
-            for (TypeConfig t : i.types().values())
+        for (IndexConfig i : cfg.indices().values()) {
+            for (TypeConfig t : i.types().values()) {
                 if (srcIndex.equals(t.sourceIndex()) && (srcType == null || srcType.equals(t.sourceType()))) {
                     if ((logMessage != null)) {
                         logMessage.append(" /").append(t.targetIndex());
@@ -42,9 +42,11 @@ public class Configurations {
 
                     configs.add(t);
                 }
-
-        if (logMessage != null)
+            }
+        }
+        if (logMessage != null) {
             LOG.debug(logMessage.append("]").toString());
+        }
 
         return configs;
     }
