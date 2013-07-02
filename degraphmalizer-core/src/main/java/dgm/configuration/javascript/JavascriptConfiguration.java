@@ -9,7 +9,10 @@ import dgm.modules.elasticsearch.ResolvedPathElement;
 import dgm.trees.Tree;
 import dgm.trees.Trees;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -35,6 +38,7 @@ public class JavascriptConfiguration implements Configuration {
     private static final Logger LOG = LoggerFactory.getLogger(JavascriptConfiguration.class);
 
     private final Map<String, JavascriptIndexConfig> indices = new HashMap<String, JavascriptIndexConfig>();
+
     private JavascriptFixtureConfiguration fixtureConfig;
 
     static {
@@ -147,7 +151,7 @@ class JavascriptIndexConfig implements IndexConfig {
                 LOG.info("Found config file [{}] for index [{}]", file, index);
                 final Reader reader = new InputStreamReader(file.openStream(), "UTF-8");
                 final String fn = file.toString();
-                final String type = file.getFile().replaceFirst(".conf.js", "");
+                final String type = file.getFile().replaceFirst(".conf.js", "").replaceFirst(".*/", "");
 
                 final Scriptable typeConfig = (Scriptable) compile(cx, buildScope, reader, fn);
 
