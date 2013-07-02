@@ -36,7 +36,7 @@ public class Options {
     String logbackConf = "logback.xml";
 
     @Parameter(names = {"-f", "--fixtures"}, description = "Load fixtures on startup")
-    boolean fixtures;
+    String fixtures;
 
     @Parameter(names = {"-l", "--jslib"}, description = "Load Javascript library from this resource if its name ends with '.js'. If the resource is not on the class path, it will be interpreted as an URL. So to load a file it should start with file://.  If the name of the resource is  INDEX, it will interpret every line of the file as another library to load")
     List<String> libraries = new ArrayList<String>();
@@ -57,7 +57,7 @@ public class Options {
 
         jmx = Boolean.parseBoolean(properties.getProperty("degraphmalizer.jmx.enabled"));
         reloading = Boolean.parseBoolean(properties.getProperty("degraphmalizer.autoreload"));
-        fixtures = Boolean.parseBoolean(properties.getProperty("degraphmalizer.fixtures"));
+        fixtures = properties.getProperty("degraphmalizer.fixtures");
 
         // try to set the defaults for a cluster
         transport.add(properties.getProperty("elasticsearch.host", "localhost"));

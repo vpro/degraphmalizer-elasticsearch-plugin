@@ -8,7 +8,6 @@ package dgm.fixtures;
  * User: rico
  * Date: 09/04/2013
  */
-public interface FixturesRunner
-{
-    public void runFixtures();
+public interface FixturesRunner {
+    void runFixtures();
 }

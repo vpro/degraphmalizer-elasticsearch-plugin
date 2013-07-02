@@ -8,7 +8,6 @@ package dgm.fixtures;
  * User: rico
  * Date: 08/04/2013
  */
-public interface Command<V>
-{
+public interface Command<V> {
     public V execute() throws Exception;
 }

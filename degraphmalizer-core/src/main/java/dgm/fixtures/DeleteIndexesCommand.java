@@ -25,21 +25,22 @@ import com.google.inject.Provider;
  */
 public class DeleteIndexesCommand implements Command<List<String>> {
     private final Client client;
-    private final Provider<Configuration> cfgProvider;
+    private final Provider<FixtureConfiguration> fixtureConfigurationProvider;
+
 
     private static final Logger log = LoggerFactory.getLogger(DeleteIndexesCommand.class);
 
 
     @Inject
-    public DeleteIndexesCommand(Client client, Provider<Configuration> cfgProvider) {
+    public DeleteIndexesCommand(Client client, Provider<Configuration> cfgProvider, Provider<FixtureConfiguration> fixtureConfigurationProvider) {
         this.client = client;
-        this.cfgProvider = cfgProvider;
+        this.fixtureConfigurationProvider = fixtureConfigurationProvider;
     }
 
     @Override
     public List<String> execute() throws Exception {
         List<String> indexes = new ArrayList<String>();
-        FixtureConfiguration fixtureConfig = cfgProvider.get().getFixtureConfiguration();
+        FixtureConfiguration fixtureConfig = fixtureConfigurationProvider.get();
         log.debug("Deleting indexes: [{}]", fixtureConfig.getIndexNames());
         for (String indexName : fixtureConfig.getIndexNames()) {
             try {

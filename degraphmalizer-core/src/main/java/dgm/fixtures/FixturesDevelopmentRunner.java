@@ -2,10 +2,7 @@ package dgm.fixtures;
 
 import dgm.Degraphmalizr;
 import dgm.ID;
-import dgm.configuration.Configuration;
-import dgm.configuration.ConfigurationMonitor;
-import dgm.configuration.IndexConfig;
-import dgm.configuration.TypeConfig;
+import dgm.configuration.*;
 import dgm.trees.Pair;
 
 import java.util.HashSet;
@@ -37,7 +34,8 @@ import com.google.inject.Provider;
  */
 public class FixturesDevelopmentRunner implements ConfigurationMonitor, FixturesRunner {
     protected final Client client;
-    protected final Provider<Configuration> cfgProvider;
+    protected final Provider<FixtureConfiguration> fixtureConfigurationProvider;
+    protected final Configuration cfg;
 
     final DeleteIndexesCommand deleteIndexesCommand;
     final DeleteTargetIndexesCommand deleteTargetIndexesCommand;
@@ -51,18 +49,19 @@ public class FixturesDevelopmentRunner implements ConfigurationMonitor, Fixtures
     private static final Logger LOG = LoggerFactory.getLogger(FixturesDevelopmentRunner.class);
 
     @Inject
-    public FixturesDevelopmentRunner(Client client, Provider<Configuration> cfgProvider, Degraphmalizr degraphmalizr) {
+    public FixturesDevelopmentRunner(Client client, Provider<Configuration> cfgProvider, Provider<FixtureConfiguration> fixtureConfigurationProvider, Degraphmalizr degraphmalizr) {
         this.client = client;
-        this.cfgProvider = cfgProvider;
+        this.fixtureConfigurationProvider = fixtureConfigurationProvider;
+        this.cfg = cfgProvider.get();
 
-        deleteIndexesCommand = new DeleteIndexesCommand(client, cfgProvider);
-        deleteTargetIndexesCommand = new DeleteTargetIndexesCommand(client, cfgProvider);
-        createIndexesCommand = new CreateIndexesCommand(client, cfgProvider);
-        createTargetIndexesCommand = new CreateTargetIndexesCommand(client, cfgProvider);
-        insertDocumentsCommand = new InsertDocumentsCommand(client, cfgProvider);
-        redegraphmalizeCommand = new RedegraphmalizeCommand(client, cfgProvider, degraphmalizr);
-        writeResultDocumentsCommand = new WriteResultDocumentsCommand(client, cfgProvider);
-        verifyResultDocumentsCommand = new VerifyResultDocumentsCommand(client, cfgProvider);
+        deleteIndexesCommand = new DeleteIndexesCommand(client, cfgProvider, fixtureConfigurationProvider);
+        deleteTargetIndexesCommand = new DeleteTargetIndexesCommand(client, cfgProvider, fixtureConfigurationProvider);
+        createIndexesCommand = new CreateIndexesCommand(client, cfgProvider, fixtureConfigurationProvider);
+        createTargetIndexesCommand = new CreateTargetIndexesCommand(client, cfgProvider, fixtureConfigurationProvider);
+        insertDocumentsCommand = new InsertDocumentsCommand(client, cfgProvider, fixtureConfigurationProvider);
+        redegraphmalizeCommand = new RedegraphmalizeCommand(client, cfgProvider, fixtureConfigurationProvider, degraphmalizr);
+        writeResultDocumentsCommand = new WriteResultDocumentsCommand(client, cfgProvider, fixtureConfigurationProvider);
+        verifyResultDocumentsCommand = new VerifyResultDocumentsCommand(client, cfgProvider, fixtureConfigurationProvider);
     }
 
     @Override
@@ -120,11 +119,10 @@ public class FixturesDevelopmentRunner implements ConfigurationMonitor, Fixtures
     public void configurationChanged(String change) {
         //when the index that was just reloaded is the source index for one of the index configurations, we reinsert the
         //fixtures.
-        final Configuration cfg = cfgProvider.get();
 
         // for quick lookup of the index name
         final Set<String> names = new HashSet<String>();
-        Iterables.addAll(names, cfg.getFixtureConfiguration().getIndexNames());
+        Iterables.addAll(names, fixtureConfigurationProvider.get().getIndexNames());
 
         boolean needRun = false;
         for (IndexConfig indexConfig : cfg.indices().values())

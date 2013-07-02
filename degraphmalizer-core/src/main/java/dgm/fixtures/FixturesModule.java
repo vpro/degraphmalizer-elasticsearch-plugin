@@ -6,23 +6,19 @@ import dgm.modules.ServiceModule;
 
 /**
  * The module what DegraphmalizeFixturesCommand will be injected into the FixtureLoader.
+ *
  * @author Ernst Bunders
  */
-public class FixturesModule extends ServiceModule
-
-{
+public class FixturesModule extends ServiceModule {
     private final RunMode runMode;
 
-    public FixturesModule(RunMode runMode)
-    {
+    public FixturesModule(RunMode runMode) {
         this.runMode = runMode;
     }
 
     @Override
-    protected void configure()
-    {
-        switch (runMode)
-        {
+    protected void configure() {
+        switch (runMode) {
             case DEVELOPMENT:
                 multiBind(ConfigurationMonitor.class).to(FixturesDevelopmentRunner.class);
                 bind(FixturesRunner.class).to(FixturesDevelopmentRunner.class);

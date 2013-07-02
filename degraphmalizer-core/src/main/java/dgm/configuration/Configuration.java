@@ -10,5 +10,4 @@ public interface Configuration {
      */
     public Map<String, ? extends IndexConfig> indices();
 
-    public FixtureConfiguration getFixtureConfiguration();
 }

@@ -32,21 +32,21 @@ import com.google.inject.Provider;
  */
 public class CreateIndexesCommand implements Command<List<String>> {
     private final Client client;
-    private final Provider<Configuration> cfgProvider;
+    private final Provider<FixtureConfiguration> fixtureConfigurationProvider;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final Logger LOG = LoggerFactory.getLogger(CreateIndexesCommand.class);
 
     @Inject
-    public CreateIndexesCommand(Client client, Provider<Configuration> cfgProvider) {
+    public CreateIndexesCommand(Client client, Provider<Configuration> cfgProvider, Provider<FixtureConfiguration> fixtureConfigurationProvider) {
         this.client = client;
-        this.cfgProvider = cfgProvider;
+        this.fixtureConfigurationProvider = fixtureConfigurationProvider;
     }
 
     @Override
     public List<String> execute() throws Exception {
         List<String> indexes = new ArrayList<String>();
-        FixtureConfiguration fixtureConfig = cfgProvider.get().getFixtureConfiguration();
+        FixtureConfiguration fixtureConfig = fixtureConfigurationProvider.get();
         for (String indexName : fixtureConfig.getIndexNames()) {
             LOG.debug("Creating index [{}]", indexName);
             FixtureIndexConfiguration indexConfig = fixtureConfig.getIndexConfig(indexName);
