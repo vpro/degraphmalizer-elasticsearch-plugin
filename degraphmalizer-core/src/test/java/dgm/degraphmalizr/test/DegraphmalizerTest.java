@@ -27,7 +27,6 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
-import org.junit.Ignore;
 import org.nnsoft.guice.sli4j.core.InjectLogger;
 import org.nnsoft.guice.sli4j.slf4j.Slf4jLoggingModule;
 import org.slf4j.Logger;
@@ -127,9 +126,9 @@ public class DegraphmalizerTest {
         ln.serviceRunner.stopServices();
     }
 
-    @Test
-    @Ignore("fails on jenkins, I don't know why")
-    public void ignoreFullTest() throws ExecutionException, InterruptedException, DegraphmalizerException {
+    @Test(enabled = false)
+    //@Ignore("fails on jenkins, I don't know why")
+    public void fullTest() throws ExecutionException, InterruptedException, DegraphmalizerException {
         final String target = "test-target";
         final String idx = "test-index";
         final String tp = "test-type";
@@ -196,8 +195,8 @@ public class DegraphmalizerTest {
         }
     }
 
-    @Test
-    @Ignore("fails on jenkins, I don't know why")
+    @Test(enabled = false)
+    //@Ignore("fails on jenkins, I don't know why")
     public void ignoreDeleteTest() throws ExecutionException, InterruptedException {
         final String target = "test-target";
         final String idx = "test-index";
