@@ -36,8 +36,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  * @author Ernst Bunders
  */
-public class JavascriptFixtureConfiguration implements FixtureConfiguration
-{
+public class JavascriptFixtureConfiguration implements FixtureConfiguration {
     public static final String MAPPING_FILE_NAME = "mapping.json";
 
     public static final String DATA_DIR = "data";
@@ -50,56 +49,44 @@ public class JavascriptFixtureConfiguration implements FixtureConfiguration
 
     private static final Logger log = LoggerFactory.getLogger(JavascriptFixtureConfiguration.class);
 
-    public JavascriptFixtureConfiguration(File configDir) throws IOException
-    {
-        try
-        {
+    public JavascriptFixtureConfiguration(File configDir) throws IOException {
+        try {
             resultsDir = new File(configDir, RESULTS_DIR);
-            for (File directory : configDir.listFiles(FixtureUtil.onlyDirsFilter()))
-            {
-                if (DATA_DIR.equals(directory.getName()))
-                {
-                    for (File indexDir : directory.listFiles(FixtureUtil.onlyDirsFilter()))
-                    {
+            for (File directory : configDir.listFiles(FixtureUtil.onlyDirsFilter())) {
+                if (DATA_DIR.equals(directory.getName())) {
+                    for (File indexDir : directory.listFiles(FixtureUtil.onlyDirsFilter())) {
                         indexConfigs.put(indexDir.getName(), new JavascriptFixtureIndexConfiguration(indexDir));
                     }
                 }
-                if (EXPECTED_DIR.equals(directory.getName()))
-                {
-                    for (File expectedDir : directory.listFiles(FixtureUtil.onlyDirsFilter()))
-                    {
+                if (EXPECTED_DIR.equals(directory.getName())) {
+                    for (File expectedDir : directory.listFiles(FixtureUtil.onlyDirsFilter())) {
                         expectedConfigs.put(expectedDir.getName(), new JavascriptFixtureIndexConfiguration(expectedDir));
                     }
                 }
             }
-        } catch (FixtureConfigurationException e)
-        {
+        } catch (FixtureConfigurationException e) {
             log.error("Could not parse fixture data. Illegal json: " + e.getMessage());
             throw e.getJpe();
         }
     }
 
     @Override
-    public Iterable<String> getIndexNames()
-    {
+    public Iterable<String> getIndexNames() {
         return indexConfigs.keySet();
     }
 
     @Override
-    public FixtureIndexConfiguration getIndexConfig(String name)
-    {
+    public FixtureIndexConfiguration getIndexConfig(String name) {
         return indexConfigs.get(name);
     }
 
     @Override
-    public Iterable<String> getExpectedIndexNames()
-    {
+    public Iterable<String> getExpectedIndexNames() {
         return expectedConfigs.keySet();
     }
 
     @Override
-    public FixtureIndexConfiguration getExpectedIndexConfig(String name)
-    {
+    public FixtureIndexConfiguration getExpectedIndexConfig(String name) {
         return expectedConfigs.get(name);
     }
 
@@ -109,8 +96,7 @@ public class JavascriptFixtureConfiguration implements FixtureConfiguration
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "Fixture configuration. Indexes: " + indexConfigs.toString();
     }
 }
@@ -119,37 +105,31 @@ public class JavascriptFixtureConfiguration implements FixtureConfiguration
 /**
  * An index config contains a number of mappings of type names to type configurations.
  */
-class JavascriptFixtureIndexConfiguration implements FixtureIndexConfiguration
-{
+class JavascriptFixtureIndexConfiguration implements FixtureIndexConfiguration {
     private Map<String, FixtureTypeConfiguration> typeConfigs = new LinkedHashMap<String, FixtureTypeConfiguration>();
 
-    JavascriptFixtureIndexConfiguration(File configDir) throws IOException
-    {
+    JavascriptFixtureIndexConfiguration(File configDir) throws IOException {
         for (File typeDir : configDir.listFiles(FixtureUtil.onlyDirsFilter()))
             typeConfigs.put(typeDir.getName(), new JavascriptFixtureTypeConfiguration(typeDir));
     }
 
     @Override
-    public Iterable<String> getTypeNames()
-    {
+    public Iterable<String> getTypeNames() {
         return typeConfigs.keySet();
     }
 
     @Override
-    public FixtureTypeConfiguration getTypeConfig(String name)
-    {
+    public FixtureTypeConfiguration getTypeConfig(String name) {
         return typeConfigs.get(name);
     }
 
     @Override
-    public Iterable<FixtureTypeConfiguration> getTypeConfigurations()
-    {
+    public Iterable<FixtureTypeConfiguration> getTypeConfigurations() {
         return (Iterable<FixtureTypeConfiguration>) typeConfigs.values();
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return " index with types:" + typeConfigs.toString();
     }
 }
@@ -159,44 +139,37 @@ class JavascriptFixtureIndexConfiguration implements FixtureIndexConfiguration
  * The type config contains a number of documents, and
  * optionally an ElasticSearch index mapping for this type.
  */
-class JavascriptFixtureTypeConfiguration implements FixtureTypeConfiguration
-{
+class JavascriptFixtureTypeConfiguration implements FixtureTypeConfiguration {
     private final JsonNode mapping;
     private final Map<String, JsonNode> documentsById = new LinkedHashMap<String, JsonNode>();
 
-    JavascriptFixtureTypeConfiguration(File configDir) throws IOException
-    {
+    JavascriptFixtureTypeConfiguration(File configDir) throws IOException {
         mapping = resolveMapping(configDir);
         readDocuments(configDir);
     }
 
     @Override
-    public JsonNode getMapping()
-    {
+    public JsonNode getMapping() {
         return mapping;
     }
 
     @Override
-    public Iterable<JsonNode> getDocuments()
-    {
+    public Iterable<JsonNode> getDocuments() {
         return documentsById.values();
     }
 
     @Override
-    public Iterable<String> getDocumentIds()
-    {
+    public Iterable<String> getDocumentIds() {
         return documentsById.keySet();
     }
 
     @Override
-    public JsonNode getDocumentById(String id)
-    {
+    public JsonNode getDocumentById(String id) {
         return documentsById.get(id);
     }
 
     @Override
-    public boolean hasDocuments()
-    {
+    public boolean hasDocuments() {
         return documentsById.size() > 0;
     }
 
@@ -206,25 +179,19 @@ class JavascriptFixtureTypeConfiguration implements FixtureTypeConfiguration
      * @param configDir the Type config dir
      * @throws IOException When all else fails.
      */
-    private void readDocuments(File configDir) throws IOException
-    {
-        for (File file : configDir.listFiles(new FilenameFilter()
-        {
+    private void readDocuments(File configDir) throws IOException {
+        for (File file : configDir.listFiles(new FilenameFilter() {
             @Override
-            public boolean accept(File dir, String name)
-            {
+            public boolean accept(File dir, String name) {
                 return (!JavascriptFixtureConfiguration.MAPPING_FILE_NAME.equals(name)) && name.endsWith(".json");
             }
-        }))
-        {
-            try
-            {
+        })) {
+            try {
                 documentsById.put(
-                        file.getName().replaceFirst(".json", ""),
-                        FixtureUtil.mapper.readTree(FileUtils.readFileToString(file))
+                    file.getName().replaceFirst(".json", ""),
+                    FixtureUtil.mapper.readTree(FileUtils.readFileToString(file))
                 );
-            } catch (JsonProcessingException e)
-            {
+            } catch (JsonProcessingException e) {
                 throw new FixtureConfigurationException(e, file);
             }
         }
@@ -235,17 +202,13 @@ class JavascriptFixtureTypeConfiguration implements FixtureTypeConfiguration
      *
      * @param configDir the Type config dir
      * @return The node created for this document.
-     * @throws IOException
      */
-    private JsonNode resolveMapping(File configDir) throws IOException
-    {
+    private JsonNode resolveMapping(File configDir) throws IOException {
         File mf = new File(configDir, JavascriptFixtureConfiguration.MAPPING_FILE_NAME);
         if (mf.exists() && mf.canRead())
-            try
-            {
+            try {
                 return FixtureUtil.mapper.readTree(FileUtils.readFileToString(mf));
-            } catch (JsonProcessingException e)
-            {
+            } catch (JsonProcessingException e) {
                 throw new FixtureConfigurationException(e, mf);
             }
 
@@ -253,41 +216,32 @@ class JavascriptFixtureTypeConfiguration implements FixtureTypeConfiguration
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return " type that has: " + documentsById.keySet().size() + " documents" + (mapping != null ? " and index mapping" : "");
     }
 }
 
-class FixtureConfigurationException extends RuntimeException
-{
+class FixtureConfigurationException extends RuntimeException {
     private JsonProcessingException jpe;
 
-    FixtureConfigurationException(JsonProcessingException jpe, File cause1)
-    {
+    FixtureConfigurationException(JsonProcessingException jpe, File cause1) {
         super("Could not parse json file [" + cause1.getAbsolutePath() + "] because of:" + jpe.getMessage(), jpe);
         this.jpe = jpe;
     }
 
-    public JsonProcessingException getJpe()
-    {
+    public JsonProcessingException getJpe() {
         return jpe;
     }
 }
 
-class FixtureUtil
-{
-    private FixtureUtil()
-    {
+class FixtureUtil {
+    private FixtureUtil() {
     }
 
-    public static FileFilter onlyDirsFilter()
-    {
-        return new FileFilter()
-        {
+    public static FileFilter onlyDirsFilter() {
+        return new FileFilter() {
             @Override
-            public boolean accept(File pathname)
-            {
+            public boolean accept(File pathname) {
                 return pathname.isDirectory();
             }
         };
