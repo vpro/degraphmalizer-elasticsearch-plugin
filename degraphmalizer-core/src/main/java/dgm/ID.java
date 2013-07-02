@@ -2,8 +2,7 @@ package dgm;
 
 import java.io.Serializable;
 
-public class ID implements Serializable
-{
+public class ID implements Serializable {
     static final long serialVersionUID = 1;
 
     private final String index;
@@ -11,62 +10,51 @@ public class ID implements Serializable
     private final String id;
     private final long version;
 
-    public ID(String index, String type, String id, long version)
-    {
+    public ID(String index, String type, String id, long version) {
         this.index = index;
         this.type = type;
         this.id = id;
         this.version = version;
     }
 
-    public final String index()
-    {
+    public final String index() {
         return index;
     }
 
-    public final String type()
-    {
+    public final String type() {
         return type;
     }
 
-    public final String id()
-    {
+    public final String id() {
         return id;
     }
 
-    public final long version()
-    {
+    public final long version() {
         return version;
     }
 
-    public final boolean isSymbolic()
-    {
+    public final boolean isSymbolic() {
         return version == 0;
     }
 
-    public ID type(String newType)
-    {
+    public ID type(String newType) {
         return new ID(index, newType, id, version);
     }
 
-    public ID index(String newIndex)
-    {
+    public ID index(String newIndex) {
         return new ID(newIndex, type, id, version);
     }
 
-    public ID id(String newId)
-    {
+    public ID id(String newId) {
         return new ID(index, type, newId, version);
     }
 
-    public ID version(long newVersion)
-    {
+    public ID version(long newVersion) {
         return new ID(index, type, id, newVersion);
     }
 
     @Override
-    public final String toString()
-    {
+    public final String toString() {
         return "(" + index + "," + type + "," + id + "," + version + ")";
     }
 
