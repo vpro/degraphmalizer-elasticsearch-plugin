@@ -1,6 +1,5 @@
 package dgm.driver;
 
-import dgm.configuration.javascript.JavascriptFixtureConfiguration;
 import dgm.driver.handler.HandlerModule;
 import dgm.driver.server.Server;
 import dgm.driver.server.ServerModule;
@@ -91,18 +90,14 @@ public final class Main {
         // configuration reloading etc
         setupConfiguration(opt, modules);
 
+        if (StringUtils.isNotEmpty(opt.fixtures)) {
+            modules.add(new FixturesModule(opt.fixtures, opt.development, opt.reloading));
+        }
         // the injector
         final Injector injector = Guice.createInjector(modules);
 
         // logger
         injector.injectMembers(this);
-
-        // fixtures
-        if (StringUtils.isNotEmpty(opt.fixtures)) {
-            injector.injectMembers(new JavascriptFixtureConfiguration(new File(opt.fixtures)));
-
-            modules.add(new FixturesModule(createRunMode(opt)));
-        }
 
         // start JMX?
         if (opt.jmx) {
@@ -192,12 +187,4 @@ public final class Main {
         System.exit(1);
     }
 
-    private static RunMode createRunMode(Options options) {
-        if (options.development && options.reloading && StringUtils.isNotEmpty(options.fixtures)) {
-            return RunMode.DEVELOPMENT;
-        } else if (options.reloading && StringUtils.isNotEmpty(options.fixtures)) {
-            return RunMode.TEST;
-        }
-        return RunMode.PRODUCTION;
-    }
 }

@@ -35,7 +35,7 @@ import com.google.inject.Provider;
 public class FixturesDevelopmentRunner implements ConfigurationMonitor, FixturesRunner {
     protected final Client client;
     protected final Provider<FixtureConfiguration> fixtureConfigurationProvider;
-    protected final Configuration cfg;
+    protected final Provider<Configuration> cfg;
 
     final DeleteIndexesCommand deleteIndexesCommand;
     final DeleteTargetIndexesCommand deleteTargetIndexesCommand;
@@ -52,7 +52,7 @@ public class FixturesDevelopmentRunner implements ConfigurationMonitor, Fixtures
     public FixturesDevelopmentRunner(Client client, Provider<Configuration> cfgProvider, Provider<FixtureConfiguration> fixtureConfigurationProvider, Degraphmalizr degraphmalizr) {
         this.client = client;
         this.fixtureConfigurationProvider = fixtureConfigurationProvider;
-        this.cfg = cfgProvider.get();
+        this.cfg = cfgProvider;
 
         deleteIndexesCommand = new DeleteIndexesCommand(client, cfgProvider, fixtureConfigurationProvider);
         deleteTargetIndexesCommand = new DeleteTargetIndexesCommand(client, cfgProvider, fixtureConfigurationProvider);
@@ -125,7 +125,7 @@ public class FixturesDevelopmentRunner implements ConfigurationMonitor, Fixtures
         Iterables.addAll(names, fixtureConfigurationProvider.get().getIndexNames());
 
         boolean needRun = false;
-        for (IndexConfig indexConfig : cfg.indices().values())
+        for (IndexConfig indexConfig : cfg.get().indices().values())
             for (TypeConfig typeConfig : indexConfig.types().values()) {
                 if (names.contains(typeConfig.sourceIndex())) {
                     needRun = true;
