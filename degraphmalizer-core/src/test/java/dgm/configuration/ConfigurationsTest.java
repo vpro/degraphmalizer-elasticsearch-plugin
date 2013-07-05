@@ -2,12 +2,11 @@ package dgm.configuration;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Test;
 
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 
 import static org.junit.Assert.assertEquals;
 
@@ -18,13 +17,6 @@ import static org.junit.Assert.assertEquals;
  */
 public class ConfigurationsTest {
 
-    @Test
-    public void testList() throws Exception {
-
-        URL[] result = Configurations.list(getClass().getResource("/conf/test-merge-multiple-src"), Predicates.<URL>alwaysTrue());
-        System.out.println(Arrays.asList(result));
-
-    }
 
     @Test
     public void testList2() throws IOException {
@@ -38,7 +30,19 @@ public class ConfigurationsTest {
             }
         };
 
-        final URL[] configFiles = Configurations.list(getClass().getResource("/conf/test-merge-multiple-src"), filenameFilter);
-        assertEquals(2, configFiles.length);
+        final List<URL> configFiles = Configurations.list("classpath:conf/test-merge-multiple-src", filenameFilter);
+        assertEquals(2, configFiles.size());
+
+
+    }
+
+    @Test
+    public void testListDir() throws IOException {
+
+
+        final List<String> dirs = Configurations.listDirectories("classpath:org/apache");
+        System.out.println(dirs);
+        assertEquals(2, dirs.size());
+
     }
 }

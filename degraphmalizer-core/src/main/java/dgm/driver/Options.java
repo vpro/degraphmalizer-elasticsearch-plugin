@@ -64,7 +64,7 @@ public class Options {
         transport.add(properties.getProperty("elasticsearch.port", "9300"));
         transport.add(properties.getProperty("elasticsearch.cluster", "elasticsearch"));
 
-        config = properties.getProperty("paths.config", "conf");
+        config = properties.getProperty("paths.config", "classpath:conf");
         graphdb = properties.getProperty("paths.graphdb", "data/graphdb");
     }
 

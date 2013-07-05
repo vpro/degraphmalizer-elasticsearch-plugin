@@ -13,7 +13,7 @@ import com.google.inject.Provides;
 public class StaticConfiguration extends AbstractConfigurationModule {
     private Configuration configuration;
 
-    public StaticConfiguration(String scriptFolder, String... libraries) {
+    public StaticConfiguration(String scriptFolder, String... libraries) throws IOException {
         super(scriptFolder, libraries);
         try {
             configuration = createConfiguration(new ObjectMapper(), scriptFolder, this.libraries);

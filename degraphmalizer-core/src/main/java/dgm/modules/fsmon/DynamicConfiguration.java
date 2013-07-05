@@ -3,6 +3,8 @@ package dgm.modules.fsmon;
 import dgm.configuration.Configuration;
 import dgm.configuration.ConfigurationMonitor;
 
+import java.io.IOException;
+
 import org.nnsoft.guice.sli4j.core.InjectLogger;
 import org.slf4j.Logger;
 
@@ -31,7 +33,7 @@ class LoggingFilesystemMonitor implements FilesystemMonitor {
  * Monitor the filesystem for changes and then provide a new configuration
  */
 public class DynamicConfiguration extends AbstractConfigurationModule {
-    public DynamicConfiguration(String scriptFolder, String... libraries) {
+    public DynamicConfiguration(String scriptFolder, String... libraries) throws IOException {
         super(scriptFolder, libraries);
     }
 

@@ -17,6 +17,7 @@ import dgm.modules.fsmon.StaticConfiguration;
 import dgm.modules.neo4j.CommonNeo4j;
 import dgm.modules.neo4j.EphemeralEmbeddedNeo4J;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +53,7 @@ class LocalNode {
         ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(logger)).setLevel(level);
     }
 
-    public static LocalNode localNode() {
+    public static LocalNode localNode() throws IOException {
         setLogLevel("org.elasticsearch", Level.WARN);
         setLogLevel("dgm", Level.TRACE);
 
@@ -66,7 +67,7 @@ class LocalNode {
         modules.add(new CommonElasticSearchModule());
         modules.add(new CommonNeo4j());
         modules.add(new EphemeralEmbeddedNeo4J());
-        modules.add(new StaticConfiguration("conf"));
+        modules.add(new StaticConfiguration("classpath:conf"));
         modules.add(new Slf4jLoggingModule());
 
         // the injector
@@ -116,7 +117,7 @@ public class DegraphmalizerTest {
     LocalNode ln;
 
     @BeforeTest
-    public void setUp() {
+    public void setUp() throws IOException {
         ln = LocalNode.localNode();
         ln.serviceRunner.startServices();
     }

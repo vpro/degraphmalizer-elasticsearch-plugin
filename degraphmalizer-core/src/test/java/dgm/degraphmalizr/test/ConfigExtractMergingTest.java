@@ -7,6 +7,7 @@ import dgm.degraphmalizr.degraphmalize.DegraphmalizeRequestType;
 import dgm.degraphmalizr.degraphmalize.DegraphmalizeResult;
 import dgm.exceptions.DegraphmalizerException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -30,7 +31,7 @@ public class ConfigExtractMergingTest {
     LocalNode ln;
 
     @BeforeClass
-    public void setUp() {
+    public void setUp() throws IOException {
         ln = LocalNode.localNode();
         ln.serviceRunner.startServices();
 
