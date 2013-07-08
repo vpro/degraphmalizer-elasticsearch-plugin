@@ -131,10 +131,11 @@ class JavascriptIndexConfig implements IndexConfig {
             }
             LOG.info("{}: Found config files  for index [{}]", directory, configFiles);
             for (URL file : configFiles) {
-                LOG.info("Found config file [{}] for index [{}]", file, index);
                 final Reader reader = new InputStreamReader(file.openStream(), "UTF-8");
                 final String fn = file.toString();
                 final String type = file.getFile().replaceFirst(".conf.js", "").replaceFirst(".*/", "");
+
+                LOG.info("Found config file [{}] for index [{}] and type [{}]", new Object[] {file, index, type});
 
                 final Scriptable typeConfig = (Scriptable) compile(cx, buildScope, reader, fn);
 
