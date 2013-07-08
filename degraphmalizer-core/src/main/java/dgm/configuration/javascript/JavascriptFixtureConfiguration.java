@@ -50,6 +50,9 @@ public class JavascriptFixtureConfiguration implements FixtureConfiguration {
     private static final Logger log = LoggerFactory.getLogger(JavascriptFixtureConfiguration.class);
 
     public JavascriptFixtureConfiguration(File configDir) throws IOException {
+        if (! configDir.exists()) {
+            throw new IllegalArgumentException("No such fixtures directory " + configDir);
+        }
         try {
             resultsDir = new File(configDir, RESULTS_DIR);
             for (File directory : configDir.listFiles(FixtureUtil.onlyDirsFilter())) {
