@@ -67,11 +67,15 @@ public class Configurations {
         if (! directory.endsWith("/")) {
             directory += "/";
         }
-        for (Resource res : resolver.getResources(directory + "*")) {
-            URL url = res.getURL();
-            if (filter == null || filter.apply(url)) {
-                result.add(url);
+        try {
+            for (Resource res : resolver.getResources(directory + "*")) {
+                URL url = res.getURL();
+                if (filter == null || filter.apply(url)) {
+                    result.add(url);
+                }
             }
+        } catch (FileNotFoundException ignored) {
+
         }
         return result;
     }

@@ -231,9 +231,11 @@ public class Degraphmalizer implements Degraphmalizr {
             final List<RecomputeRequest> post = determineRecomputeActions(action);
 
             // add all the missing requests from pre to post
-            for (RecomputeRequest r : pre)
-                if (!inList(r, post))
+            for (RecomputeRequest r : pre) {
+                if (!inList(r, post)) {
                     post.add(r);
+                }
+            }
 
             logRecomputes(action.id(), post);
             return recomputeAffectedDocuments(post);

@@ -127,8 +127,7 @@ public class DegraphmalizerTest {
         ln.serviceRunner.stopServices();
     }
 
-    @Test(enabled = false)
-    //@Ignore("fails on jenkins, I don't know why")
+    @Test(enabled = true)
     public void fullTest() throws ExecutionException, InterruptedException, DegraphmalizerException {
         final String target = "test-target";
         final String idx = "test-index";
@@ -196,8 +195,7 @@ public class DegraphmalizerTest {
         }
     }
 
-    @Test(enabled = false)
-    //@Ignore("fails on jenkins, I don't know why")
+    @Test(enabled = true)
     public void ignoreDeleteTest() throws ExecutionException, InterruptedException {
         final String target = "test-target";
         final String idx = "test-index";
