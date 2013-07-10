@@ -1,8 +1,8 @@
 package dgm.configuration;
 
-import com.tinkerpop.blueprints.Direction;
-
 import java.util.Map;
+
+import com.tinkerpop.blueprints.Direction;
 
 /**
  * Any walk that can be reversed could function as an input to the parameter
@@ -49,4 +49,6 @@ public interface WalkConfig {
      * Name of the walk
      */
     String name();
+
+    Integer maxDistance();
 }

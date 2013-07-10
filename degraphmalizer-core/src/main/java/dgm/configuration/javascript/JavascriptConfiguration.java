@@ -203,6 +203,7 @@ class JavascriptTypeConfig implements TypeConfig {
 
     final ObjectMapper objectMapper;
 
+
     final Map<String, WalkConfig> walks = new HashMap<String, WalkConfig>();
 
     public JavascriptTypeConfig(ObjectMapper objectMapper, String type, Scriptable scope, Scriptable script, IndexConfig indexConfig) throws IOException {
@@ -226,6 +227,7 @@ class JavascriptTypeConfig implements TypeConfig {
             sourceIndex = ScriptableObject.getTypedProperty(script, "sourceIndex", String.class);
             sourceType = ScriptableObject.getTypedProperty(script, "sourceType", String.class);
 
+
             // add the walks
             final Scriptable walks = (Scriptable) fetchObjectOrNull("walks");
             if (walks != null) {
@@ -237,9 +239,13 @@ class JavascriptTypeConfig implements TypeConfig {
 
                     final Direction direction = Direction.valueOf(ScriptableObject.getProperty(walk, "direction").toString());
 
+                    Integer  maxDistance = ScriptableObject.getTypedProperty(walk, "maxDistance", Integer.class);
+                    if (maxDistance == null) maxDistance = Integer.MAX_VALUE;
+
+
                     final Scriptable properties = (Scriptable) ScriptableObject.getProperty(walk, "properties");
 
-                    final JavascriptWalkConfig walkCfg = new JavascriptWalkConfig(objectMapper, walkName, direction, this, scope, properties);
+                    final JavascriptWalkConfig walkCfg = new JavascriptWalkConfig(objectMapper, walkName, direction, maxDistance, this, scope, properties);
 
                     this.walks.put(walkName, walkCfg);
                 }
@@ -372,6 +378,23 @@ class JavascriptTypeConfig implements TypeConfig {
     public Map<String, WalkConfig> walks() {
         return walks;
     }
+
+    @Override
+    public Integer maximalWalkDepth() {
+        int result = 0;
+        for (WalkConfig walkConfig : walks().values()) {
+            if (walkConfig.maxDistance() > result) {
+                result = walkConfig.maxDistance();
+            }
+        }
+        return result;
+    }
+
+
+    @Override
+    public String toString() {
+        return getClass().getName() + ' ' + sourceIndex() + '/' + sourceType() + "->" + targetIndex() + '/' + targetType() + "(" + maximalWalkDepth() + ")";
+    }
 }
 
 class JavascriptWalkConfig implements WalkConfig {
@@ -379,14 +402,18 @@ class JavascriptWalkConfig implements WalkConfig {
     final Direction direction;
     final TypeConfig typeCfg;
 
+    final Integer maxDistance;
+
     // TODO use guava immutables
     final Map<String, JavascriptPropertyConfig> properties = new HashMap<String, JavascriptPropertyConfig>();
 
 
-    public JavascriptWalkConfig(ObjectMapper om, String walkName, Direction direction, TypeConfig typeCfg, Scriptable scope, Scriptable propertyScriptable) {
+    public JavascriptWalkConfig(ObjectMapper om, String walkName, Direction direction, Integer maxDistance, TypeConfig typeCfg, Scriptable scope, Scriptable propertyScriptable) {
         this.walkName = walkName;
         this.direction = direction;
+        this.maxDistance = maxDistance;
         this.typeCfg = typeCfg;
+
 
         try {
             Context.enter();
@@ -424,6 +451,11 @@ class JavascriptWalkConfig implements WalkConfig {
     @Override
     public String name() {
         return walkName;
+    }
+
+    @Override
+    public Integer maxDistance() {
+        return maxDistance;
     }
 }
 

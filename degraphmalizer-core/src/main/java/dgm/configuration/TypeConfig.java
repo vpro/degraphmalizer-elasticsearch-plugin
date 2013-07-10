@@ -1,42 +1,36 @@
 package dgm.configuration;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import dgm.Subgraph;
 
 import java.util.Map;
 
-public interface TypeConfig
-{
-	String name();
+import com.fasterxml.jackson.databind.JsonNode;
 
-	/**
-	 * Function that given the document computes it's generated subgraph
-	 * 
-	 * @param document
-	 */
+public interface TypeConfig {
+    String name();
+
+    /**
+     * Function that given the document computes it's generated subgraph
+     */
     Subgraph extract(JsonNode document);
 
-	/**
-	 * Process the document before it is inserted into ES
-	 *
-	 * @param document
-	 * @return the process document as you want it inserted into ES
-	 */
-	JsonNode transform(JsonNode document);
+    /**
+     * Process the document before it is inserted into ES
+     *
+     * @return the process document as you want it inserted into ES
+     */
+    JsonNode transform(JsonNode document);
 
 
     /**
      * Return false if the document shouldn't be processed by the degraphmalizer
-     *
-     * @param document
-     * @return
      */
-	boolean filter(JsonNode document);
-	
-	/**
-	 * A type is always part of a {@link IndexConfig}
-	 */
-	IndexConfig index();
+    boolean filter(JsonNode document);
+
+    /**
+     * A type is always part of a {@link IndexConfig}
+     */
+    IndexConfig index();
 
     /**
      * The index to which the denormalized documents should be written.
@@ -55,7 +49,10 @@ public interface TypeConfig
     String sourceType();
 
     /**
-	 * Walks performed for this type
-	 */
-	Map<String, WalkConfig> walks();
+     * Walks performed for this type
+     */
+    Map<String, WalkConfig> walks();
+
+    Integer maximalWalkDepth();
+
 }

@@ -1,54 +1,53 @@
 package dgm.degraphmalizr;
 
+import dgm.GraphUtilities;
+import dgm.ID;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
-import dgm.GraphUtilities;
-import dgm.ID;
 
 /**
  * Vertex and it's ID.
  */
-public class VID
-{
+public class VID {
     final ID id;
     final Vertex v;
 
     final ObjectMapper om;
 
-    public VID(ObjectMapper om, Vertex v)
-    {
+    public VID(ObjectMapper om, Vertex v) {
         this.om = om;
         this.id = GraphUtilities.getID(om, v);
         this.v = v;
     }
 
-    public VID(ObjectMapper om, Vertex v, ID id)
-    {
+    public VID(ObjectMapper om, Vertex v, ID id) {
         this.om = om;
         this.id = id;
         this.v = v;
     }
 
-    public VID(ObjectMapper om, Graph G, ID id)
-    {
+    public VID(ObjectMapper om, Graph G, ID id) {
         this.om = om;
         this.id = id;
         this.v = GraphUtilities.findVertex(om, G, id);
     }
 
-    public boolean isCorrect()
-    {
+    public boolean isCorrect() {
         return id.equals(GraphUtilities.getID(om, v));
     }
 
-    public final ID id()
-    {
+    public final ID id() {
         return id;
     }
 
-    public final Vertex vertex()
-    {
+    public final Vertex vertex() {
         return v;
+    }
+
+    @Override
+    public String toString() {
+        return v + ":" + id;
     }
 }

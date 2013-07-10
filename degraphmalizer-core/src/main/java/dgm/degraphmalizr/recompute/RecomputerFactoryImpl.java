@@ -40,8 +40,7 @@ import com.tinkerpop.blueprints.Vertex;
 import static dgm.GraphUtilities.toJSON;
 
 
-public class RecomputerFactoryImpl implements Recomputer
-{
+public class RecomputerFactoryImpl implements Recomputer {
     @InjectLogger
     Logger log;
 
@@ -57,8 +56,7 @@ public class RecomputerFactoryImpl implements Recomputer
                                  @Fetches ExecutorService fetchQueue,
                                  @Recomputes ExecutorService recomputeQueue,
                                  ObjectMapper objectMapper,
-                                 QueryFunction queryFunction)
-    {
+                                 QueryFunction queryFunction) {
         this.fetchQueue = fetchQueue;
         this.recomputeQueue = recomputeQueue;
         this.graph = graph;
@@ -67,36 +65,32 @@ public class RecomputerFactoryImpl implements Recomputer
         this.objectMapper = objectMapper;
     }
 
-    class Recomputer
-    {
+    class Recomputer {
         protected final RecomputeRequest request;
         protected final RecomputeCallback callback;
 
 
-        public Recomputer(RecomputeRequest request, RecomputeCallback callback)
-        {
+        public Recomputer(RecomputeRequest request, RecomputeCallback callback) {
             this.request = request;
             this.callback = callback;
         }
 
-        private HashMap<String,JsonNode> walkResults() throws ExecutionException, InterruptedException
-        {
-            final HashMap<String, JsonNode> walkResults = new HashMap<String, JsonNode>();
+        private Map<String, JsonNode> walkResults() throws ExecutionException, InterruptedException {
+            final Map<String, JsonNode> walkResults = new HashMap<String, JsonNode>();
 
-            if (request.config.walks().entrySet().isEmpty())
+            if (request.config.walks().entrySet().isEmpty()) {
                 return walkResults;
+            }
 
             boolean isAbsent = false;
 
-            for (Map.Entry<String, WalkConfig> walkCfg : request.config.walks().entrySet())
-            {
+            for (Map.Entry<String, WalkConfig> walkCfg : request.config.walks().entrySet()) {
                 // walk graph, and fetch all the children in the opposite direction of the walk
                 final Tree<Pair<Edge, Vertex>> tree =
                         GraphUtilities.childrenFrom(request.root.vertex(), walkCfg.getValue().direction());
 
                 // write size information to log
-                if (log.isDebugEnabled())
-                {
+                if (log.isDebugEnabled()) {
                     final int size = Iterables.size(Trees.bfsWalk(tree));
                     log.debug("Retrieving {} documents from ES", size);
                 }
@@ -108,15 +102,13 @@ public class RecomputerFactoryImpl implements Recomputer
                 final Optional<Tree<ResolvedPathElement>> fullTree = Trees.optional(docTree);
 
                 // TODO this does not work at present as Trees.optional behaves 'lazy'
-                if (!fullTree.isPresent())
-                {
+                if (!fullTree.isPresent()) {
                     isAbsent = true;
                     break;
                 }
 
                 // reduce each property to a value based on the walk result
-                for (final Map.Entry<String, ? extends PropertyConfig> propertyCfg : walkCfg.getValue().properties().entrySet())
-                {
+                for (final Map.Entry<String, ? extends PropertyConfig> propertyCfg : walkCfg.getValue().properties().entrySet()) {
                     try {
                         walkResults.put(propertyCfg.getKey(), propertyCfg.getValue().reduce(fullTree.get()));
                     } catch (ValueIsAbsentException v) {
@@ -127,8 +119,7 @@ public class RecomputerFactoryImpl implements Recomputer
             }
 
             // something failed, so we abort the whole re-computation
-            if (isAbsent)
-            {
+            if (isAbsent) {
                 log.debug("Some results were absent, aborting re-computation for {}", request.root.id());
 
                 // TODO return list of expired nodes/IDs
@@ -140,8 +131,7 @@ public class RecomputerFactoryImpl implements Recomputer
             return walkResults;
         }
 
-        private IndexResponse writeToES(ObjectNode document)
-        {
+        private IndexResponse writeToES(ObjectNode document) {
             final TypeConfig conf = request.config;
             final ID sourceID = request.root.id();
             final ID targetID = sourceID.index(conf.targetIndex()).type(conf.targetType());
@@ -155,15 +145,15 @@ public class RecomputerFactoryImpl implements Recomputer
                     .setSource(documentSource).execute().actionGet();
 
             // log some stuff
-            final Object[] args = new Object[]{targetID.index(), targetID.type(), targetID.id(), ir.version()};
-            log.debug("Written /{}/{}/{}, version={}", args);
-            log.debug("Content: {}", documentSource);
+            if (log.isDebugEnabled()) {
+                log.debug("Written /{}/{}/{}, version={}", new Object[]{targetID.index(), targetID.type(), targetID.id(), ir.version()});
+                log.debug("Content: {}", documentSource);
+            }
 
             return ir;
         }
 
-        private JsonNode getFromES() throws IOException
-        {
+        private JsonNode getFromES() throws IOException {
 // TODO oops this doesn't work at the moment, we have the REDUCE results in walkResults :(
 //            // we are always on the root node of a walk result, so use that if it's there
 //            if(walkResults != null && !walkResults.isEmpty())
@@ -177,26 +167,21 @@ public class RecomputerFactoryImpl implements Recomputer
 
             // retrieve the raw document from ES
             final Optional<ResolvedPathElement> r = queryFn.apply(new Pair<Edge, Vertex>(null, request.root.vertex()));
-            if(!r.isPresent() || !r.get().getResponse().isPresent())
+            if (!r.isPresent() || !r.get().getResponse().isPresent())
                 throw new SourceMissingException(request.root.id());
 
             return objectMapper.readTree(r.get().getResponse().get().sourceAsString());
         }
 
-        public RecomputeResult recompute() throws IOException, ExecutionException, InterruptedException
-        {
+        public RecomputeResult recompute() throws IOException, ExecutionException, InterruptedException {
             log.debug("Recompute {} started", request.root.id().toString());
-
-            // ideally, this is handled in a monad, but with this boolean we keep track of failures
-            boolean isAbsent = false;
 
             // Now we are going to:
             // - fetch the current ElasticSearch document,
             final JsonNode rawDocument = getFromES();
 
             // - Return when this document does not need to be processed.
-            if (!request.config.filter(rawDocument))
-            {
+            if (!request.config.filter(rawDocument)) {
                 log.debug("Aborted recompute for {} because filter=false for this document", request.root.id().toString());
                 throw new DocumentFiltered();
             }
@@ -207,8 +192,7 @@ public class RecomputerFactoryImpl implements Recomputer
             // - We call the reduce() method for this walk, with the tree of documents as argument.
             // - We collect the result.
             final Map<String, JsonNode> walkResults = walkResults();
-            if(walkResults == null)
-            {
+            if (walkResults == null) {
                 log.info("Aborted recompute for {} because graph is expired for this node", request.root.id().toString());
                 throw new ExpiredException(Collections.<ID>emptyList());
             }
@@ -222,8 +206,7 @@ public class RecomputerFactoryImpl implements Recomputer
             // pre-process document using javascript
             final JsonNode transformed = request.config.transform(rawDocument);
 
-            if (!transformed.isObject())
-            {
+            if (!transformed.isObject()) {
                 log.info("Aborted recompute for {} because the source document is not a JSON object", request.root.id().toString());
                 throw new SourceNotObjectException();
             }
@@ -231,8 +214,9 @@ public class RecomputerFactoryImpl implements Recomputer
             final ObjectNode document = (ObjectNode) transformed;
 
             // add the results to the document
-            for (Map.Entry<String, JsonNode> e : walkResults.entrySet())
+            for (Map.Entry<String, JsonNode> e : walkResults.entrySet()) {
                 document.put(e.getKey(), e.getValue());
+            }
 
             // write the result document to the target index
             final IndexResponse ir = writeToES(document);
@@ -252,19 +236,14 @@ public class RecomputerFactoryImpl implements Recomputer
      * @return the ES IndexRespons to the insert of the target document.
      */
     @Override
-    public RecomputeResult recompute(final RecomputeRequest request, RecomputeCallback callback)
-    {
+    public RecomputeResult recompute(final RecomputeRequest request, RecomputeCallback callback) {
         final Recomputer recomputer = new Recomputer(request, callback);
 
-        try
-        {
+        try {
             return recomputer.recompute();
-        }
-        catch (DegraphmalizerException e)
-        {
+        } catch (DegraphmalizerException e) {
             throw e;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new WrappedException(e);
         }
     }

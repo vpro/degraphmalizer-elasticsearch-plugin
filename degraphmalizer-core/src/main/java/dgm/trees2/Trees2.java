@@ -6,42 +6,41 @@ import dgm.trees.TreeVisitor;
 import java.util.LinkedList;
 
 
-public class Trees2
-{
-   private enum Token
-   {
-       NODE {
-           public <A> boolean visit(A node, TreeViewer<A> viewer, TreeVisitor<A> visitor) {
-               return visitor.visitNode(node, viewer);
-          }
-       },
+public class Trees2 {
+    private enum Token {
+        NODE {
+            @Override
+            public <A> boolean visit(A node, TreeViewer<A> viewer, TreeVisitor<A> visitor) {
+                return visitor.visitNode(node, viewer);
+            }
+        },
 
-       BEGIN {
-           public <A> boolean visit(A node, TreeViewer<A> viewer, TreeVisitor<A> visitor) {
-               visitor.beginChildren(node, viewer);
-               return true;
-           }
-       },
+        BEGIN {
+            @Override
+            public <A> boolean visit(A node, TreeViewer<A> viewer, TreeVisitor<A> visitor) {
+                visitor.beginChildren(node, viewer);
+                return true;
+            }
+        },
 
-       END {
-           public <A> boolean visit(A node, TreeViewer<A> viewer, TreeVisitor<A> visitor) {
-               visitor.endChildren(node, viewer);
-               return true;
-           }
-       };
+        END {
+            @Override
+            public <A> boolean visit(A node, TreeViewer<A> viewer, TreeVisitor<A> visitor) {
+                visitor.endChildren(node, viewer);
+                return true;
+            }
+        };
 
-       // return false if the Token is a "marker", ie. BEGIN or END
-       abstract <A> boolean visit(A node, TreeViewer<A> viewer, TreeVisitor<A> visitor);
-   }
+        // return false if the Token is a "marker", ie. BEGIN or END
+        abstract <A> boolean visit(A node, TreeViewer<A> viewer, TreeVisitor<A> visitor);
+    }
 
-    static class Event<A>
-    {
+    static class Event<A> {
         public final A node;
         public final Token token;
         public final Event<A> otherSide;
 
-        private Event(Token token, A node, Event<A> other)
-        {
+        private Event(Token token, A node, Event<A> other) {
             this.node = node;
             this.token = token;
             this.otherSide = other;
@@ -97,8 +96,7 @@ public class Trees2
      *  - endChildren v[0]
      * </pre>
      */
-    public static <A> void bfsVisit(final A root, final TreeViewer<A> viewer, final TreeVisitor<A> visitor)
-    {
+    public static <A> void bfsVisit(final A root, final TreeViewer<A> viewer, final TreeVisitor<A> visitor) {
         // algorithm as follows:
         // - put first node on the tree
         // - visit that node
@@ -111,18 +109,19 @@ public class Trees2
 
         Event<A> insertionPt = null;
 
-        while (!q.isEmpty())
-        {
+        while (!q.isEmpty()) {
             final Event<A> a = q.poll();
 
             // update the insertion point to the END node
-            if (a.token == Token.BEGIN)
+            if (a.token == Token.BEGIN) {
                 insertionPt = a.otherSide;
+            }
 
             // call visitor interface
-            if (a.callVisitor(viewer, visitor))
+            if (a.callVisitor(viewer, visitor)) {
                 // nothing further to be done for marker event (BEGIN/END)
                 continue;
+            }
 
             final Event<A> end = Event.end(a.node);
             final Event<A> start = Event.begin(a.node, end);
@@ -130,17 +129,16 @@ public class Trees2
             insertBefore(q, start, insertionPt);
 
             // add children to end of the queue
-            for (A c : viewer.children(a.node))
+            for (A c : viewer.children(a.node)) {
                 insertBefore(q, Event.node(c), insertionPt);
+            }
 
             insertBefore(q, end, insertionPt);
         }
     }
 
-    private static <A> void insertBefore(LinkedList<A> ll, A value, A before)
-    {
-        if (before == null)
-        {
+    private static <A> void insertBefore(LinkedList<A> ll, A value, A before) {
+        if (before == null) {
             ll.addLast(value);
             return;
         }

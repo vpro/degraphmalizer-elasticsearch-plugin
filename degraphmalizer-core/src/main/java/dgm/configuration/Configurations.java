@@ -34,7 +34,7 @@ public class Configurations {
         for (IndexConfig i : cfg.indices().values()) {
             for (TypeConfig t : i.types().values()) {
                 if (srcIndex.equals(t.sourceIndex()) && (srcType == null || srcType.equals(t.sourceType()))) {
-                    if ((logMessage != null)) {
+                    if (logMessage != null) {
                         logMessage.append(" /").append(t.targetIndex());
                         logMessage.append("/").append(t.targetType());
                         logMessage.append(", ");

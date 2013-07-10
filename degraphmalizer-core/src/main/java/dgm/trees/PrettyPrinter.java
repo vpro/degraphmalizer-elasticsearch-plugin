@@ -2,8 +2,6 @@ package dgm.trees;
 
 
 import com.google.common.base.Function;
-import dgm.trees.TreeViewer;
-import dgm.trees.TreeVisitor;
 
 public class PrettyPrinter<T> implements TreeVisitor<T>
 {

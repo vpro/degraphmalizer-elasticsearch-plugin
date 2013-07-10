@@ -2,35 +2,38 @@ package dgm.trees;
 
 import java.util.*;
 
-/** Build a tree by visiting it
+/**
+ * Build a tree by visiting it
  */
-public class TreeBuilder<A> implements TreeVisitor<A>
-{
+public class TreeBuilder<A> implements TreeVisitor<A> {
     final Deque<List<Tree<A>>> trees = new LinkedList<List<Tree<A>>>();
     Tree<A> root = null;
+    int level = 0;
 
     @Override
-    public boolean visitNode(A node, TreeViewer<A> viewer)
-    {
+    public boolean visitNode(A node, TreeViewer<A> viewer) {
         return false;
     }
 
     @Override
-    public void beginChildren(A node, TreeViewer<A> viewer)
-    {
+    public void beginChildren(A node, TreeViewer<A> viewer) {
         trees.addFirst(new ArrayList<Tree<A>>());
+        level++;
     }
 
     @Override
-    public void endChildren(A node, TreeViewer<A> viewer)
-    {
+    public void endChildren(A node, TreeViewer<A> viewer) {
+        level--;
         final List<Tree<A>> children = trees.removeFirst();
+
+        final List<Tree<A>> parent = trees.peekFirst();
+
+
+        //final Tree<A> tree = new ImmutableTree<A>(new TreeEntry<A>(node, level), children);
         final Tree<A> tree = new ImmutableTree<A>(node, children);
 
         // we have not reached the top of the queue
-        final List<Tree<A>> parent = trees.peekFirst();
-        if(parent != null)
-        {
+        if (parent != null) {
             parent.add(tree);
             return;
         }
@@ -39,8 +42,7 @@ public class TreeBuilder<A> implements TreeVisitor<A>
         root = tree;
     }
 
-    public Tree<A> tree()
-    {
+    public Tree<A> tree() {
         return root;
     }
 }
