@@ -454,8 +454,8 @@ public class Degraphmalizer implements Degraphmalizr {
         for (TypeConfig c : Configurations.configsFor(cfgProvider.get(), v_id.id().index(), v_id.id().type())) {
             if (distance <= c.maximalWalkDepth()) {
                 recomputeRequests.add(new RecomputeRequest(v_id, c, distance));
-        } else {
-                log.info("Ignoring recompute request for " + v_id + " because " + c + " has maximal distance smaller than " + distance);
+            } else {
+                log.debug("Ignoring recompute request for {} because {} has maximal distance smaller than {}", new Object[] {v_id, c, distance});
             }
         }
 
