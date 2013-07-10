@@ -20,15 +20,6 @@ public class ImmutableTree<A> implements Tree<A> {
         return children;
     }
 
-
-    public ImmutableTree(A value, Tree<A>... children) {
-        this(new TreeEntry<A>(value, 0), Arrays.asList(children));
-    }
-
-    public ImmutableTree(A value, Iterable<Tree<A>> children) {
-        this(new TreeEntry<A>(value, 0), children);
-    }
-
     public ImmutableTree(TreeEntry<A> value, Tree<A>... children) {
         this(value, Arrays.asList(children));
     }
