@@ -2,6 +2,8 @@ package dgm.trees2;
 
 import dgm.trees.*;
 
+import java.util.Iterator;
+
 import org.testng.annotations.Test;
 
 import com.google.common.base.Function;
@@ -15,11 +17,9 @@ import static org.fest.assertions.Assertions.assertThat;
 
 
 @Test
-public class MinimalTreeTest
-{
+public class MinimalTreeTest {
     // complete graph on 3 vertices, but then directed
-    public static Pair<Graph,Vertex> K_3()
-    {
+    public static Pair<Graph, Vertex> K_3() {
         final TinkerGraph g = new TinkerGraph();
 
         final Vertex v1 = g.addVertex(null);
@@ -30,7 +30,7 @@ public class MinimalTreeTest
         g.addEdge(null, v2, v3, "is");
         g.addEdge(null, v3, v1, "cyclic");
 
-        return new Pair<Graph,Vertex>(g,v1);
+        return new Pair<Graph, Vertex>(g, v1);
     }
 
     /* This graph:
@@ -39,41 +39,39 @@ public class MinimalTreeTest
      *
      *      ,-->(2)
      *    /
-     * (1)---->(3)
+     * (1)---->(3) ---> (3_1)
      *   \
      *    `--->(4)
      *
      * </pre>
      */
-    public static Pair<Graph,Vertex> forkGraph()
-    {
+    public static Pair<Graph, Vertex> forkGraph() {
         final TinkerGraph g = new TinkerGraph();
 
         final Vertex v1 = g.addVertex(null);
         final Vertex v2 = g.addVertex(null);
         final Vertex v3 = g.addVertex(null);
         final Vertex v4 = g.addVertex(null);
+        final Vertex v3_1 = g.addVertex(null);
 
-        final Edge e1 = g.addEdge(null, v1, v2, "a");
-        final Edge e2 = g.addEdge(null, v1, v3, "b");
-        final Edge e3 = g.addEdge(null, v1, v4, "c");
+        g.addEdge(null, v1, v2, "a");
+        g.addEdge(null, v1, v3, "b");
+        g.addEdge(null, v1, v4, "c");
+        g.addEdge(null, v3, v3_1, "d");
 
-        return new Pair<Graph,Vertex>(g,v1);
+        return new Pair<Graph, Vertex>(g, v1);
     }
 
-    static String nullSafeToString(final Object o)
-    {
-        if(o == null)
+    static String nullSafeToString(final Object o) {
+        if (o == null)
             return "null";
 
         return o.toString();
     }
 
-    final static Function<Pair<Edge,Vertex>,String> show = new Function<Pair<Edge, Vertex>, String>()
-    {
+    final static Function<Pair<Edge, Vertex>, String> show = new Function<Pair<Edge, Vertex>, String>() {
         @Override
-        public String apply(Pair<Edge, Vertex> input)
-        {
+        public String apply(Pair<Edge, Vertex> input) {
             final StringBuilder sb = new StringBuilder("(");
             sb.append(nullSafeToString(input.a));
             sb.append("--");
@@ -85,18 +83,17 @@ public class MinimalTreeTest
 
 
     @Test
-    public void testTreeVisitors()
-    {
+    public void testTreeVisitors() {
         // 1 --> 2 --> 3 --> 1 --> 2 --> ...
-        final Pair<Graph,Vertex> p = K_3();
+        final Pair<Graph, Vertex> p = K_3();
         final Vertex root = p.b;
 
-        final TreeViewer<Pair<Edge, Vertex>> tv = new GraphTreeViewer(Direction.OUT);
+        final TreeViewer<Pair<Edge, Vertex>> treeViewer = new GraphTreeViewer(Direction.OUT);
 
-        final PrettyPrinter<Pair<Edge,Vertex>> pp = new PrettyPrinter<Pair<Edge, Vertex>>(show);
-        final LevelLimitingVisitor<Pair<Edge,Vertex>> llpp = new LevelLimitingVisitor<Pair<Edge, Vertex>>(5, pp);
+        final PrettyPrinter<Pair<Edge, Vertex>> pp = new PrettyPrinter<Pair<Edge, Vertex>>(show);
+        final LevelLimitingVisitor<Pair<Edge, Vertex>> llpp = new LevelLimitingVisitor<Pair<Edge, Vertex>>(5, pp);
 
-        Trees2.bfsVisit(new Pair<Edge, Vertex>(null, root), tv, llpp);
+        Trees2.bfsVisit(new Pair<Edge, Vertex>(null, root), treeViewer, llpp);
 
         final String s = "(null--v[0])\n" +
                 "  (e[3][0-this->1]--v[1])\n" +
@@ -107,11 +104,11 @@ public class MinimalTreeTest
         assertThat(s).isEqualTo(pp.toString());
 
 
-        final PrettyPrinter<Pair<Edge,Vertex>> pp2 = new PrettyPrinter<Pair<Edge, Vertex>>(show);
-        final OccurrenceTracker<Pair<Edge,Vertex>> ot = new NodeAlreadyVisitedTracker();
-        final CycleKiller<Pair<Edge,Vertex>> ckpp = new CycleKiller<Pair<Edge, Vertex>>(pp2, ot);
+        final PrettyPrinter<Pair<Edge, Vertex>> pp2 = new PrettyPrinter<Pair<Edge, Vertex>>(show);
+        final OccurrenceTracker<Pair<Edge, Vertex>> ot = new NodeAlreadyVisitedTracker();
+        final CycleKiller<Pair<Edge, Vertex>> ckpp = new CycleKiller<Pair<Edge, Vertex>>(pp2, ot);
 
-        Trees2.bfsVisit(new Pair<Edge, Vertex>(null, root), tv, ckpp);
+        Trees2.bfsVisit(new Pair<Edge, Vertex>(null, root), treeViewer, ckpp);
 
         final String t = "(null--v[0])\n" +
                 "  (e[3][0-this->1]--v[1])\n" +
@@ -121,16 +118,21 @@ public class MinimalTreeTest
     }
 
     @Test
-    public void testTreeBuilder()
-    {
-        final Pair<Graph,Vertex> p = forkGraph();
+    public void testTreeBuilder() {
+        final Pair<Graph, Vertex> p = forkGraph();
         final TreeViewer<Pair<Edge, Vertex>> tv = new GraphTreeViewer(Direction.OUT);
-        final TreeBuilder<Pair<Edge,Vertex>> tb = new TreeBuilder<Pair<Edge, Vertex>>();
+        final TreeBuilder<Pair<Edge, Vertex>> tb = new TreeBuilder<Pair<Edge, Vertex>>();
 
-        Trees2.bfsVisit(new Pair<Edge,Vertex>(null, p.b), tv, tb);
+        Trees2.bfsVisit(new Pair<Edge, Vertex>(null, p.b), tv, tb);
 
-        final Tree<Pair<Edge,Vertex>> tree = tb.tree();
+        final Tree<Pair<Edge, Vertex>> tree = tb.tree();
 
         assertThat(tree.children()).hasSize(3);
+        Iterator<TreeEntry<Pair<Edge, Vertex>>> i =  Trees.bfsWalk(tree).iterator();
+        assertThat(i.next().getDistance()).isEqualTo(0);
+        assertThat(i.next().getDistance()).isEqualTo(1);
+        assertThat(i.next().getDistance()).isEqualTo(1);
+        assertThat(i.next().getDistance()).isEqualTo(1);
+        assertThat(i.next().getDistance()).isEqualTo(2);
     }
 }

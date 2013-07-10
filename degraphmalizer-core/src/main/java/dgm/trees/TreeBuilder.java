@@ -29,8 +29,7 @@ public class TreeBuilder<A> implements TreeVisitor<A> {
         final List<Tree<A>> parent = trees.peekFirst();
 
 
-        //final Tree<A> tree = new ImmutableTree<A>(new TreeEntry<A>(node, level), children);
-        final Tree<A> tree = new ImmutableTree<A>(node, children);
+        final Tree<A> tree = new ImmutableTree<A>(new TreeEntry<A>(node, level), children);
 
         // we have not reached the top of the queue
         if (parent != null) {

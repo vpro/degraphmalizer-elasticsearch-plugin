@@ -20,5 +20,7 @@ package dgm.trees;
 public interface Tree<A> {
     A value();
 
+    TreeEntry<A> entry();
+
     Iterable<Tree<A>> children();
 }

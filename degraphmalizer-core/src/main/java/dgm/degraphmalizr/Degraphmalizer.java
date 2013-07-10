@@ -18,6 +18,7 @@ import dgm.modules.bindingannotations.Recomputes;
 import dgm.modules.elasticsearch.QueryFunction;
 import dgm.trees.Pair;
 import dgm.trees.Tree;
+import dgm.trees.TreeEntry;
 import dgm.trees.Trees;
 
 import java.io.IOException;
@@ -421,8 +422,8 @@ public class Degraphmalizer implements Degraphmalizr {
         }
 
         // create "dirty document" messages for each node in the tree
-        for (Pair<Edge, Vertex> pathElement : Iterables.concat(Trees.bfsWalk(up), Trees.bfsWalk(down))) {
-            final Vertex v = pathElement.b;
+        for (TreeEntry<Pair<Edge, Vertex>> pathElement : Iterables.concat(Trees.bfsWalk(up), Trees.bfsWalk(down))) {
+            final Vertex v = pathElement.getValue().b;
 
             // skip the root of the tree, ie. ourselves:
             if (v.equals(root)) {
