@@ -26,8 +26,4 @@ public class TreeEntry<E> {
         return distance + ":" + getValue();
     }
 
-    @Override
-    public boolean equals(Object o) {
-        return o instanceof TreeEntry && value.equals(((TreeEntry) o).value);
-    }
 }
