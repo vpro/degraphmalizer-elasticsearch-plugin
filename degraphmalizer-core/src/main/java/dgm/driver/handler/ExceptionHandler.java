@@ -1,32 +1,34 @@
 package dgm.driver.handler;
 
+import dgm.exceptions.DegraphmalizerException;
+import dgm.exceptions.WrappedException;
+
+import java.io.IOException;
+import java.io.StringWriter;
+
+import org.jboss.netty.buffer.ChannelBuffers;
+import org.jboss.netty.channel.*;
+import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
+import org.jboss.netty.handler.codec.http.HttpResponse;
+import org.jboss.netty.handler.codec.http.HttpVersion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Charsets;
-import dgm.exceptions.DegraphmalizerException;
-import dgm.exceptions.WrappedException;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.*;
-import org.jboss.netty.handler.codec.http.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.StringWriter;
-
-public class ExceptionHandler extends SimpleChannelHandler
-{
+public class ExceptionHandler extends SimpleChannelHandler {
     // TODO use annotated POJO messages and inject the objectmapper
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     Logger log = LoggerFactory.getLogger(ExceptionHandler.class);
 
     @Override
-    public final void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception
-    {
+    public final void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
         final Channel c = ctx.getChannel();
         final DegraphmalizerException ex = wrapException(e.getCause());
         final String json = renderExceptionResponse(objectMapper, ex);
@@ -36,17 +38,16 @@ public class ExceptionHandler extends SimpleChannelHandler
 
         logException(ex);
 
-        if(c.isOpen() && c.isWritable())
+        if (c.isOpen() && c.isWritable()) {
             c.write(response).addListener(ChannelFutureListener.CLOSE);
+        }
     }
 
     // log according to severity
-    void logException(DegraphmalizerException ex)
-    {
-        switch (ex.severity())
-        {
+    void logException(DegraphmalizerException ex) {
+        switch (ex.severity()) {
             case INFO:
-                log.info(ex.getMessage(), ex);
+                log.info(ex.getMessage());
                 return;
             case WARN:
                 log.warn(ex.getMessage(), ex);
@@ -59,16 +60,15 @@ public class ExceptionHandler extends SimpleChannelHandler
     }
 
     // wrap the exception if needed
-    private DegraphmalizerException wrapException(Throwable t)
-    {
-        if(DegraphmalizerException.class.isAssignableFrom(t.getClass()))
-            return (DegraphmalizerException)t;
+    private DegraphmalizerException wrapException(Throwable t) {
+        if (DegraphmalizerException.class.isAssignableFrom(t.getClass())) {
+            return (DegraphmalizerException) t;
+        }
 
         return new WrappedException(t);
     }
 
-    public static String renderExceptionResponse(ObjectMapper om, DegraphmalizerException ex) throws IOException
-    {
+    public static String renderExceptionResponse(ObjectMapper om, DegraphmalizerException ex) throws IOException {
         // TODO wrap in "data" element according to JSEND ?
         // construct JSEND style JSON response http://labs.omniti.com/labs/jsend
 
@@ -78,8 +78,9 @@ public class ExceptionHandler extends SimpleChannelHandler
 
         // add optional cause
         final Throwable cause = ex.getCause();
-        if(cause != null)
+        if (cause != null) {
             root.put("cause", renderException(om, cause));
+        }
 
         final StringWriter sw = new StringWriter();
         final JsonGenerator gen = new JsonFactory().createJsonGenerator(sw).useDefaultPrettyPrinter();
@@ -88,11 +89,11 @@ public class ExceptionHandler extends SimpleChannelHandler
         return sw.toString();
     }
 
-    public static ObjectNode renderException(ObjectMapper om, Throwable t)
-    {
+    public static ObjectNode renderException(ObjectMapper om, Throwable t) {
         final ArrayNode ss = om.createArrayNode();
-        for(StackTraceElement elt : t.getStackTrace())
+        for (StackTraceElement elt : t.getStackTrace()) {
             ss.add(elt.toString());
+        }
 
         final ObjectNode ex = om.createObjectNode();
         ex.put("message", t.getMessage());
