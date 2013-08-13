@@ -1,11 +1,14 @@
 package dgm.configuration;
 
+import org.elasticsearch.common.settings.Settings;
+
 /**
  * @author Ernst Bunders
  */
-public interface FixtureIndexConfiguration
-{
-    public Iterable<String> getTypeNames();
-    public FixtureTypeConfiguration getTypeConfig(String name);
-    public Iterable<FixtureTypeConfiguration> getTypeConfigurations();
+public interface FixtureIndexConfiguration {
+    Iterable<String> getTypeNames();
+    FixtureTypeConfiguration getTypeConfig(String name);
+    Iterable<FixtureTypeConfiguration> getTypeConfigurations();
+    Settings getSettingsConfig();
+
 }

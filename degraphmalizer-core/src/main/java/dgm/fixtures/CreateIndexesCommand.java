@@ -61,7 +61,7 @@ public class CreateIndexesCommand implements Command<List<String>> {
     }
 
     CreateIndexRequest buildCreateIndexRequest(String indexName, FixtureIndexConfiguration indexConfig) throws IOException {
-        CreateIndexRequest request = new CreateIndexRequest(indexName, createSettings());
+        CreateIndexRequest request = new CreateIndexRequest(indexName, createSettings(indexConfig));
         for (String typeName : indexConfig.getTypeNames()) {
             FixtureTypeConfiguration typeConfig = indexConfig.getTypeConfig(typeName);
             if (typeConfig.getMapping() != null) {
@@ -72,12 +72,18 @@ public class CreateIndexesCommand implements Command<List<String>> {
         return request;
     }
 
-    private Settings createSettings() {
-        ObjectNode indexConfigSettingsNode = objectMapper.createObjectNode();
-        indexConfigSettingsNode.
-            put("number_of_shards", 2).
-            put("number_of_replicas", 1);
+    private Settings createSettings(FixtureIndexConfiguration indexConfig) {
 
-        return ImmutableSettings.settingsBuilder().loadFromSource(indexConfigSettingsNode.toString()).build();
+        Settings settings = indexConfig.getSettingsConfig();
+        if (settings == null) {
+            ObjectNode indexConfigSettingsNode = objectMapper.createObjectNode();
+            indexConfigSettingsNode.
+                    put("number_of_shards", 2).
+                    put("number_of_replicas", 1);
+
+            return ImmutableSettings.settingsBuilder().loadFromSource(indexConfigSettingsNode.toString()).build();
+        } else {
+            return settings;
+        }
     }
 }

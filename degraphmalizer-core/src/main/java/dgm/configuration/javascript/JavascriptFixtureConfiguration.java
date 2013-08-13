@@ -12,6 +12,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,10 +112,17 @@ public class JavascriptFixtureConfiguration implements FixtureConfiguration {
  */
 class JavascriptFixtureIndexConfiguration implements FixtureIndexConfiguration {
     private Map<String, FixtureTypeConfiguration> typeConfigs = new LinkedHashMap<String, FixtureTypeConfiguration>();
+    private Settings settings;
 
     JavascriptFixtureIndexConfiguration(File configDir) throws IOException {
-        for (File typeDir : configDir.listFiles(FixtureUtil.onlyDirsFilter()))
+        for (File typeDir : configDir.listFiles(FixtureUtil.onlyDirsFilter())) {
             typeConfigs.put(typeDir.getName(), new JavascriptFixtureTypeConfiguration(typeDir));
+        }
+        File file = new File(configDir, "settings.json");
+        if (file.exists()) {
+            settings = ImmutableSettings.settingsBuilder().loadFromUrl(file.toURI().toURL()).build();
+        }
+
     }
 
     @Override
@@ -126,10 +135,17 @@ class JavascriptFixtureIndexConfiguration implements FixtureIndexConfiguration {
         return typeConfigs.get(name);
     }
 
+
+    @Override
+    public Settings getSettingsConfig() {
+        return settings;
+    }
+
     @Override
     public Iterable<FixtureTypeConfiguration> getTypeConfigurations() {
-        return (Iterable<FixtureTypeConfiguration>) typeConfigs.values();
+        return typeConfigs.values();
     }
+
 
     @Override
     public String toString() {
