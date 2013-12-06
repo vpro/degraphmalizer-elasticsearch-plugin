@@ -21,16 +21,18 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
+
+/**
+ * What does this actually test?
+ */
 @Test
-public class DegraphmalizerTest
-{
+public class DegraphmalizerTest {
     private final ESLogger logger = Loggers.getLogger(DegraphmalizerTest.class);
 
     private Node node;
 
     @BeforeMethod
-    public void createIndex()
-    {
+    public void createIndex() {
         node = nodeBuilder().local(true).settings(settingsBuilder()
                 .put("path.data", "target/data")
                 .put("cluster.name", "test-cluster-" + NetworkUtils.getLocalAddress())
@@ -47,8 +49,7 @@ public class DegraphmalizerTest
     }
 
     @AfterMethod
-    public void deleteIndex()
-    {
+    public void deleteIndex() {
         logger.info("deleting index [test]");
         node.client().admin().indices().delete(deleteIndexRequest("test")).actionGet();
         logger.info("stopping ES");
@@ -58,13 +59,13 @@ public class DegraphmalizerTest
     }
 
     @Test
-    public void testCreateDocument() throws IOException
-    {
-        final IndexResponse indexResponse = node.client().index(indexRequest("test").type("person").source(
+    public void testCreateDocument() throws IOException {
+        final IndexResponse indexResponse = node.client().index(indexRequest("test").type("person").id("foo/bar").source(
                 jsonBuilder().startObject().field("jelle", "was here").endObject())).actionGet();
 
         final String id = indexResponse.getId();
 
+		System.out.println("Found id: " + id);
         node.client().admin().indices().refresh(refreshRequest()).actionGet();
 
         final GetResponse getResponse = node.client().get(getRequest("test").id(id)).actionGet();
@@ -73,8 +74,7 @@ public class DegraphmalizerTest
     }
 
     @Test
-    public void testPluginSettings()
-    {
+    public void testPluginSettings() {
         final Settings pluginSettings = node.settings().getComponentSettings(DegraphmalizerPlugin.class);
         final String host = pluginSettings.get("DegraphmalizerPlugin.degraphmalizerHost");
         assertThat(host, equalTo("127.0.0.1")); // As set in setupServer()
