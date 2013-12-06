@@ -27,7 +27,7 @@ import static org.hamcrest.Matchers.is;
  */
 @Test
 public class DegraphmalizerTest {
-    private final ESLogger logger = Loggers.getLogger(DegraphmalizerTest.class);
+    private final static ESLogger LOG = Loggers.getLogger(DegraphmalizerTest.class);
 
     private Node node;
 
@@ -39,22 +39,22 @@ public class DegraphmalizerTest {
                 .put("gateway.type", "none")
                 .put("plugin.degraphmalizer.DegraphmalizerPlugin.degraphmalizerHost", "127.0.0.1")).node();
 
-        logger.info("creating index [test]");
+        LOG.info("creating index [test]");
         node.client().admin().indices().create(createIndexRequest("test").settings(settingsBuilder().put("index.numberOfReplicas", 0))).actionGet();
-        logger.info("Running Cluster Health");
+        LOG.info("Running Cluster Health");
         ClusterHealthResponse clusterHealth = node.client().admin().cluster().health(clusterHealthRequest().waitForGreenStatus()).actionGet();
-        logger.info("Done Cluster Health, status " + clusterHealth.status());
+        LOG.info("Done Cluster Health, status " + clusterHealth.status());
         assertThat(clusterHealth.timedOut(), equalTo(false));
         assertThat(clusterHealth.status(), equalTo(ClusterHealthStatus.GREEN));
     }
 
     @AfterMethod
     public void deleteIndex() {
-        logger.info("deleting index [test]");
+        LOG.info("deleting index [test]");
         node.client().admin().indices().delete(deleteIndexRequest("test")).actionGet();
-        logger.info("stopping ES");
+        LOG.info("stopping ES");
         node.stop();
-        logger.info("closing ES");
+        LOG.info("closing ES");
         node.close();
     }
 

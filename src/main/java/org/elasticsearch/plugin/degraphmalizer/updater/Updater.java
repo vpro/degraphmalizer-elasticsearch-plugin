@@ -5,7 +5,6 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.common.logging.ESLogger;
@@ -167,13 +166,8 @@ public final class Updater implements Runnable {
 		}
 
 		try {
-            return new URIBuilder()
-                    .setScheme(uriScheme)
-                    .setHost(uriHost)
-                    .setPort(uriPort)
-                    .setPath(path)
-                    .build();
-        } catch (URISyntaxException e) {
+            return new URI(uriScheme + "://" + uriHost + ":" + uriPort + path);
+		} catch (URISyntaxException e) {
             throw new RuntimeException("Unexpected error building uri for change " + change + " on index " + index, e);
         }
     }
