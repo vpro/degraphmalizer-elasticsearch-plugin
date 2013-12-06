@@ -48,11 +48,13 @@ public class Change implements StringSerialization<Change> {
         retries++;
     }
 
-    public String toValue() {
+    @Override
+	public String toValue() {
         return this.action().name() + "," + this.type() + "," + this.version() + ","+this.retries()+"," + this.id();
     }
 
-    public Change fromValue(String value) {
+    @Override
+	public Change fromValue(String value) {
         String[] values = value.split(",", 5);
         Action action = Action.valueOf(values[0]);
         String type = values[1];

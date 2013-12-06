@@ -14,6 +14,7 @@ import org.elasticsearch.common.logging.Loggers;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 
 /**
  * This class handles Change instances. The class can be configured via elasticsearch.yml (see README.md for
@@ -77,7 +78,8 @@ public final class Updater implements Runnable {
         sending = true;
     }
 
-    public void run() {
+    @Override
+	public void run() {
         boolean done = false;
         while (!done)
         {
@@ -155,9 +157,16 @@ public final class Updater implements Runnable {
         final String id = change.id();
         final long version = change.version();
 
-        final String path = String.format("/%s/%s/%s/%d", index, type, id, version);
+        final String path;
 
-        try {
+		try {
+			path = String.format("/%s/%s/%s/%d", URLEncoder.encode(index, "UTF-8"), URLEncoder.encode(type, "UTF-8"), URLEncoder.encode(id, "UTF-8"), version);
+		} catch (UnsupportedEncodingException e) {
+			// cannot happen UTF-8 is supported
+			throw new RuntimeException(e);
+		}
+
+		try {
             return new URIBuilder()
                     .setScheme(uriScheme)
                     .setHost(uriHost)

@@ -9,6 +9,6 @@ package org.elasticsearch.plugin.degraphmalizer.updater;
  * Date: 08/02/2013
  */
 public interface StringSerialization<T> {
-    public String toValue();
-    public T fromValue(String value);
+    String toValue();
+    T fromValue(String value);
 }

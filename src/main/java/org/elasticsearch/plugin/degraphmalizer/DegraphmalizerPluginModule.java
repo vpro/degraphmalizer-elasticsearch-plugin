@@ -6,11 +6,9 @@ import org.elasticsearch.plugin.degraphmalizer.updater.UpdaterManager;
 /**
  * The Google Guice dependency injection module for the Degraphmalizer plugin.
  */
-public class DegraphmalizerPluginModule extends AbstractModule
-{
+public class DegraphmalizerPluginModule extends AbstractModule {
     @Override
-    protected void configure()
-    {
+    protected void configure() {
         bind(UpdaterManager.class).in(Singleton.class);
         bind(DegraphmalizerLifecycleListener.class).asEagerSingleton();
         bind(DegraphmalizerClusterListener.class).asEagerSingleton();

@@ -7,6 +7,7 @@ import org.elasticsearch.plugins.AbstractPlugin;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * This class represents the Degraphmalizer Elastic Search plugin. It specifies its the dependency injection modules
@@ -15,29 +16,25 @@ import java.util.Collection;
 public class DegraphmalizerPlugin extends AbstractPlugin {
 
     @Override
-    public String name()
-    {
+    public String name()  {
         return "degraphmalizer";
     }
 
     @Override
-    public String description()
-    {
+    public String description() {
         return "Extract 'inter-document' graph structure and use it to compute new attributes";
     }
 
     @Override
-    public Collection<Class<? extends Module>> modules()
-    {
-        final ArrayList<Class<? extends Module>> modules = new ArrayList<Class<? extends Module>>();
+    public Collection<Class<? extends Module>> modules() {
+        final List<Class<? extends Module>> modules = new ArrayList<Class<? extends Module>>();
         modules.add(DegraphmalizerPluginModule.class);
         return modules;
     }
 
     @Override
-    public Collection<Class<? extends LifecycleComponent>> services()
-    {
-        final ArrayList<Class<? extends LifecycleComponent>> services = new ArrayList<Class<? extends LifecycleComponent>>();
+    public Collection<Class<? extends LifecycleComponent>> services() {
+        final List<Class<? extends LifecycleComponent>> services = new ArrayList<Class<? extends LifecycleComponent>>();
         services.add(UpdaterManager.class);
         return services;
     }
