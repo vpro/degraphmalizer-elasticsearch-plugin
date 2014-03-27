@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.elasticsearch</groupId>
   <artifactId>degraphmalizer-elasticsearch-plugin</artifactId>
-  <version>0.19.11-0.2-SNAPSHOT</version>
+  <version>0.19.11-0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <scm>
@@ -11,10 +11,6 @@
     <developerConnection>scm:git:git@github.com:vpro/degraphmalizer-elasticsearch-plugin.git</developerConnection>
     <url>https://github.com/vpro/degraphmalizer-elasticsearch-plugin</url>
   </scm>
-
-  <properties>
-    <github.maven.repository>file:../mvn-repo</github.maven.repository>
-  </properties>
 
   <repositories>
     <repository>
@@ -72,38 +68,4 @@
       </plugin>
     </plugins>
   </build>
-
-  <profiles>
-    <profile>
-      <id>default</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <distributionManagement>
-        <repository>
-          <id>repo</id>
-          <url>${github.maven.repository}/releases</url>
-        </repository>
-        <snapshotRepository>
-          <id>snapshot-repo</id>
-          <url>${github.maven.repository}/snapshots</url>
-        </snapshotRepository>
-      </distributionManagement>
-    </profile>
-    <profile>
-      <id>vpro</id>
-      <distributionManagement>
-        <repository>
-          <id>nexus</id>
-          <name>Nexus releases</name>
-          <url>http://nexus.vpro.nl/content/repositories/releases</url>
-        </repository>
-        <snapshotRepository>
-          <id>nexus</id>
-          <name>Nexus snapshots</name>
-          <url>http://nexus.vpro.nl/content/repositories/snapshots</url>
-        </snapshotRepository>
-      </distributionManagement>
-    </profile>
-  </profiles>
 </project>
