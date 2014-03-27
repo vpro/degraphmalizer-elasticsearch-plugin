@@ -12,6 +12,11 @@
     <url>https://github.com/vpro/degraphmalizer-elasticsearch-plugin</url>
   </scm>
 
+
+  <properties>
+    <github.maven.repository>file:../mvn-repo</github.maven.repository>
+  </properties>
+
   <repositories>
     <repository>
       <id>sonatype</id>
@@ -68,4 +73,38 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>default</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <distributionManagement>
+        <repository>
+          <id>repo</id>
+          <url>${github.maven.repository}/releases</url>
+        </repository>
+        <snapshotRepository>
+          <id>snapshot-repo</id>
+          <url>${github.maven.repository}/snapshots</url>
+        </snapshotRepository>
+      </distributionManagement>
+    </profile>
+    <profile>
+      <id>vpro</id>
+      <distributionManagement>
+        <repository>
+          <id>nexus</id>
+          <name>Nexus releases</name>
+          <url>http://nexus.vpro.nl/content/repositories/releases</url>
+        </repository>
+        <snapshotRepository>
+          <id>nexus</id>
+          <name>Nexus snapshots</name>
+          <url>http://nexus.vpro.nl/content/repositories/snapshots</url>
+        </snapshotRepository>
+      </distributionManagement>
+    </profile>
+  </profiles>
 </project>
