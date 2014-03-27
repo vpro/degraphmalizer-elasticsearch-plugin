@@ -22,6 +22,7 @@ public class Change implements StringSerialization<Change> {
         this.id = id;
         this.version = version;
         this.retries = retries;
+
     }
 
     public Action action() {

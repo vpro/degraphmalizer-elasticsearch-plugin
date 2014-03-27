@@ -9,6 +9,8 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
+import org.elasticsearch.index.aliases.IndexAlias;
+import org.elasticsearch.index.aliases.IndexAliasesService;
 
 import java.io.*;
 import java.net.URI;
@@ -32,6 +34,7 @@ public final class Updater implements Runnable {
     private final int maxRetries;
 
     private final String index;
+	private final IndexAliasesService aliasesService;
 
     private File errorFile;
 
@@ -40,8 +43,9 @@ public final class Updater implements Runnable {
     private boolean sending = false;
 
 
-    public Updater(final String index, final String uriScheme, final String uriHost, final int uriPort, final long retryDelayOnFailureInMillis, final String logPath, final int queueLimit, final int maxRetries) {
+    public Updater(final String index, IndexAliasesService indexAliases, final String uriScheme, final String uriHost, final int uriPort, final long retryDelayOnFailureInMillis, final String logPath, final int queueLimit, final int maxRetries) {
         this.index = index;
+		this.aliasesService = indexAliases;
         this.uriScheme = uriScheme;
         this.uriHost = uriHost;
         this.uriPort = uriPort;
@@ -79,27 +83,21 @@ public final class Updater implements Runnable {
 
     @Override
 	public void run() {
-        boolean done = false;
-        while (!done)
-        {
+		while (true) {
             Change change = null;
-            try
-            {
-                if (sending)
-                {
+            try {
+                if (sending) {
                     change = queue.take().thing();
                     perform(change);
-                } else
-                {
+                } else {
                     Thread.sleep(NAPTIME);
                 }
-                if (shutdownInProgress)
-                {
+
+				if (shutdownInProgress) {
                     queue.shutdown();
-                    done = true;
+					break;
                 }
-            } catch (Exception e)
-            {
+            } catch (Exception e) {
                 LOG.error("Updater for index {} got exception: {} for the change {}", new Object[]{index, e, change});
             }
         }
@@ -115,51 +113,61 @@ public final class Updater implements Runnable {
     }
 
     private void perform(final Change change) {
-        final HttpRequestBase request = toRequest(change);
-        try {
-            final HttpResponse response = httpClient.execute(request);
-
-            if (!isSuccessful(response)) {
-                LOG.warn("Request {} {} was not successful. Response status code: {}.", request.getMethod(), request.getURI(), response.getStatusLine().getStatusCode());
-                retry(change);
-            } else {
-                LOG.debug("Change performed: {} : {}", index, change);
-            }
-
-            EntityUtils.consume(response.getEntity());
-        } catch (IOException e) {
-            LOG.warn("Error executing request {} {}: {}", request.getMethod(), request.getURI(), e.getMessage());
-            retry(change);
-        }
+		perform(change, index);
+		for (IndexAlias alias : aliasesService) {
+			perform(change, alias.alias());
+		}
     }
 
-    private HttpRequestBase toRequest(final Change change) {
+	private void perform(final Change change, String indexNameOrAlias) {
+		final HttpRequestBase request = toRequest(change, indexNameOrAlias);
+
+		try {
+			final HttpResponse response = httpClient.execute(request);
+
+			if (!isSuccessful(response)) {
+				LOG.warn("Request {} {} was not successful. Response status code: {}.", request.getMethod(), request.getURI(), response.getStatusLine().getStatusCode());
+				retry(change);
+			} else {
+				LOG.debug("Change performed: {} : {}", indexNameOrAlias, change);
+			}
+
+			EntityUtils.consume(response.getEntity());
+		} catch (IOException e) {
+			LOG.warn("Error executing request {} {}: {}", request.getMethod(), request.getURI(), e.getMessage());
+			retry(change);
+		}
+	}
+
+    private HttpRequestBase toRequest(final Change change, String indexNameOrAlias) {
         final HttpRequestBase request;
 
+		URI uri = buildURI(change, indexNameOrAlias);
         final Action action = change.action();
         switch (action) {
             case UPDATE:
-                request = new HttpGet(buildURI(change));
+                request = new HttpGet(uri);
                 break;
             case DELETE:
-                request = new HttpDelete(buildURI(change));
+                request = new HttpDelete(uri);
                 break;
             default:
-                throw new RuntimeException("Unknown action " + action + " for " + change + " on index " + index);
+                throw new RuntimeException("Unknown action " + action + " for " + change + " on index " + indexNameOrAlias);
         }
 
         return request;
     }
 
-    private URI buildURI(final Change change) {
+    private URI buildURI(final Change change, String indexNameOrAlias) {
         final String type = change.type();
         final String id = change.id();
         final long version = change.version();
 
         final String path;
 
+
 		try {
-			path = String.format("/%s/%s/%s/%d", URLEncoder.encode(index, "UTF-8"), URLEncoder.encode(type, "UTF-8"), URLEncoder.encode(id, "UTF-8"), version);
+			path = String.format("/%s/%s/%s/%d", URLEncoder.encode(indexNameOrAlias, "UTF-8"), URLEncoder.encode(type, "UTF-8"), URLEncoder.encode(id, "UTF-8"), version);
 		} catch (UnsupportedEncodingException e) {
 			// cannot happen UTF-8 is supported
 			throw new RuntimeException(e);
@@ -168,7 +176,7 @@ public final class Updater implements Runnable {
 		try {
             return new URI(uriScheme + "://" + uriHost + ":" + uriPort + path);
 		} catch (URISyntaxException e) {
-            throw new RuntimeException("Unexpected error building uri for change " + change + " on index " + index, e);
+            throw new RuntimeException("Unexpected error building uri for change " + change + " on index or alias " + indexNameOrAlias, e);
         }
     }
 

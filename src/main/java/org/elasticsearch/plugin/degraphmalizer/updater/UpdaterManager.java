@@ -10,6 +10,7 @@ import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.index.aliases.IndexAliasesService;
 import org.elasticsearch.plugin.degraphmalizer.DegraphmalizerPlugin;
 
 import javax.management.MBeanServer;
@@ -25,7 +26,7 @@ import java.util.Map;
 public class UpdaterManager extends AbstractLifecycleComponent<UpdaterManager> implements UpdaterManagerMBean {
     private static final ESLogger LOG = Loggers.getLogger(UpdaterManager.class);
 
-    private Map<String, Updater> updaters = new HashMap<String, Updater>();
+    private final Map<String, Updater> updaters = new HashMap<String, Updater>();
 
     private final String uriScheme;
     private final String uriHost;
@@ -45,8 +46,8 @@ public class UpdaterManager extends AbstractLifecycleComponent<UpdaterManager> i
 
         // Please keep this in sync with the documentation in README.md
         this.uriScheme = pluginSettings.get("DegraphmalizerPlugin.degraphmalizerScheme", "http");
-        this.uriHost = pluginSettings.get("DegraphmalizerPlugin.degraphmalizerHost", "localhost");
-        this.uriPort = pluginSettings.getAsInt("DegraphmalizerPlugin.degraphmalizerPort", 9821);
+        this.uriHost   = pluginSettings.get("DegraphmalizerPlugin.degraphmalizerHost", "localhost");
+        this.uriPort   = pluginSettings.getAsInt("DegraphmalizerPlugin.degraphmalizerPort", 9821);
         this.retryDelayOnFailureInMillis = pluginSettings.getAsLong("DegraphmalizerPlugin.retryDelayOnFailureInMillis", 10000l);
 
         this.queueLimit = pluginSettings.getAsInt("DegraphmalizerPlugin.queueLimit", 100000);
@@ -87,15 +88,17 @@ public class UpdaterManager extends AbstractLifecycleComponent<UpdaterManager> i
         }
     }
 
-    public synchronized void startUpdater(final String index) {
-        if (updaters.containsKey(index)) {
-            LOG.warn("Updater for index {} already exists", index);
-            return;
+	public synchronized void startUpdater(final String index, IndexAliasesService aliasesService) {
+		if (updaters.containsKey(index)) {
+			LOG.warn("Updater for index {} already exists", index);
+			return;
         }
-        final Updater updater = new Updater(index, uriScheme, uriHost, uriPort, retryDelayOnFailureInMillis, logPath, queueLimit, maxRetries);
+        final Updater updater = new Updater(index, aliasesService, uriScheme, uriHost, uriPort, retryDelayOnFailureInMillis, logPath, queueLimit, maxRetries);
         updaters.put(index, updater);
-        new Thread(updater,"updater-"+index).start();
-        if (sending) updater.startSending();
+        new Thread(updater, "updater-" + index).start();
+        if (sending) {
+			updater.startSending();
+		}
         LOG.info("Updater started for index {}", index);
     }
 

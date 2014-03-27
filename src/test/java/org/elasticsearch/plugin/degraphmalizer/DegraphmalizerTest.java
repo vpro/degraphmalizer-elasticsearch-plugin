@@ -2,6 +2,7 @@ package org.elasticsearch.plugin.degraphmalizer;
 
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.common.logging.ESLogger;
@@ -41,6 +42,7 @@ public class DegraphmalizerTest {
 
         LOG.info("creating index [test]");
         node.client().admin().indices().create(createIndexRequest("test").settings(settingsBuilder().put("index.numberOfReplicas", 0))).actionGet();
+		node.client().admin().indices().aliases(new IndicesAliasesRequest().addAlias("test", "test-alias")).actionGet();
         LOG.info("Running Cluster Health");
         ClusterHealthResponse clusterHealth = node.client().admin().cluster().health(clusterHealthRequest().waitForGreenStatus()).actionGet();
         LOG.info("Done Cluster Health, status " + clusterHealth.status());

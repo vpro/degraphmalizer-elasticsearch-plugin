@@ -19,14 +19,13 @@ import java.util.List;
  * Date: 11/03/2013
  */
 public class DegraphmalizerClusterListener implements ClusterStateListener {
-    ClusterService clusterService;
-    UpdaterManager updaterManager;
+
+	private final UpdaterManager updaterManager;
     private static final String DEGRAPHMALIZER_NODENAME = "Degraphmalizer";
 
     @Inject
     public DegraphmalizerClusterListener(ClusterService clusterService, UpdaterManager updaterManager) {
-        this.clusterService = clusterService;
-        this.updaterManager = updaterManager;
+		this.updaterManager = updaterManager;
         clusterService.add(this);
     }
 
@@ -47,9 +46,9 @@ public class DegraphmalizerClusterListener implements ClusterStateListener {
         }
     }
 
-    private DiscoveryNode findNode(List<DiscoveryNode> nodes, String nodeName) {
+    private static DiscoveryNode findNode(List<DiscoveryNode> nodes, String nodeName) {
         for (DiscoveryNode node : nodes) {
-            if (DEGRAPHMALIZER_NODENAME.equals(node.name())) {
+            if (nodeName.equals(node.name())) {
                 return node;
             }
         }
