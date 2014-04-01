@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.elasticsearch</groupId>
   <artifactId>degraphmalizer-elasticsearch-plugin</artifactId>
-  <version>0.19.11-0.3</version>
+  <version>0.19.11-0.4-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <scm>
