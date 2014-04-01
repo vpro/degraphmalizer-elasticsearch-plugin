@@ -1,21 +1,24 @@
 package org.elasticsearch.plugin.degraphmalizer.updater;
 
+import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.index.aliases.IndexAlias;
 import org.elasticsearch.index.aliases.IndexAliasesService;
-
-import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLEncoder;
 
 /**
  * This class handles Change instances. The class can be configured via elasticsearch.yml (see README.md for
@@ -25,7 +28,7 @@ import java.net.URLEncoder;
 public final class Updater implements Runnable {
     private static final ESLogger LOG = Loggers.getLogger(Updater.class);
     private static final int NAPTIME = 5 * 1000;
-    private final HttpClient httpClient = new DefaultHttpClient();
+    private final HttpClient httpClient;
 
     private final String uriScheme;
     private final String uriHost;
@@ -53,9 +56,16 @@ public final class Updater implements Runnable {
         this.maxRetries = maxRetries;
 
         queue = new UpdaterQueue(logPath, index, queueLimit);
-        new Thread(queue,"updaterqueue-"+index).start();
+        new Thread(queue,"updaterqueue-" + index).start();
 
         errorFile = new File(logPath, index + "-error.log");
+
+
+        HttpParams params = new BasicHttpParams();
+        HttpConnectionParams.setConnectionTimeout(params, 50000);
+        HttpConnectionParams.setSoTimeout(params, 50000);
+        httpClient = new DefaultHttpClient(params);
+
 
         LOG.info("Updater instantiated for index {}. Updates will be sent to {}://{}:{}. Retry delay on failure is {} milliseconds.", index, uriScheme, uriHost, uriPort, retryDelayOnFailureInMillis);
         LOG.info("Updater will overflow in {} after limit of {} has been reached, messages will be retried {} times ", logPath, queueLimit, maxRetries);
@@ -113,10 +123,14 @@ public final class Updater implements Runnable {
     }
 
     private void perform(final Change change) {
-		perform(change, index);
-		for (IndexAlias alias : aliasesService) {
-			perform(change, alias.alias());
-		}
+        if (change.getIndexNameOrAlias() == null) {
+            perform(change, index);
+            for (IndexAlias alias : aliasesService) {
+                perform(change, alias.alias());
+            }
+        } else {
+            perform(change, change.getIndexNameOrAlias());
+        }
     }
 
 	private void perform(final Change change, String indexNameOrAlias) {
@@ -127,7 +141,7 @@ public final class Updater implements Runnable {
 
 			if (!isSuccessful(response)) {
 				LOG.warn("Request {} {} was not successful. Response status code: {}.", request.getMethod(), request.getURI(), response.getStatusLine().getStatusCode());
-				retry(change);
+				retry(change, indexNameOrAlias);
 			} else {
 				LOG.debug("Change performed: {} : {}", indexNameOrAlias, change);
 			}
@@ -135,7 +149,7 @@ public final class Updater implements Runnable {
 			EntityUtils.consume(response.getEntity());
 		} catch (IOException e) {
 			LOG.warn("Error executing request {} {}: {}", request.getMethod(), request.getURI(), e.getMessage());
-			retry(change);
+			retry(change, indexNameOrAlias);
 		}
 	}
 
@@ -185,9 +199,9 @@ public final class Updater implements Runnable {
         return statusCode == 200;
     }
 
-    private void retry(final Change change) {
+    private void retry(Change change, String indexNameOrAlias) {
         if (change.retries() < maxRetries) {
-            change.retried();
+            change = change.retried(indexNameOrAlias);
             final DelayedImpl<Change> delayedChange = new DelayedImpl<Change>(change, change.retries() * retryDelayOnFailureInMillis);
             queue.add(delayedChange);
             LOG.debug("Retrying change {} on index {} in {} milliseconds", change, index, retryDelayOnFailureInMillis);

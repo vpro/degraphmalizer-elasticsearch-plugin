@@ -1,15 +1,16 @@
 package org.elasticsearch.plugin.degraphmalizer.updater;
 
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.Loggers;
-
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.Loggers;
 
 public class UpdaterQueue implements Runnable, UpdaterQueueMBean
 {
@@ -27,8 +28,7 @@ public class UpdaterQueue implements Runnable, UpdaterQueueMBean
 
     private boolean shuttingDown = false;
 
-    public UpdaterQueue(final String logPath, final String index, final int limit)
-    {
+    public UpdaterQueue(final String logPath, final String index, final int limit) {
         this.limit = limit / 2;
         this.index = index;
         this.overflowFileManager = new UpdaterOverflowFileManager(logPath, index, limit);
@@ -36,32 +36,23 @@ public class UpdaterQueue implements Runnable, UpdaterQueueMBean
     }
 
     @Override
-    public void run()
-    {
+    public void run()  {
         // TODO should be using wait/notify
-        while (!shuttingDown)
-        {
-            if (outputQueue.size() < limit)
-            {
-                if (overflowFileManager.isEmpty())
-                {
+        while (!shuttingDown) {
+            if (outputQueue.size() < limit) {
+                if (overflowFileManager.isEmpty()) {
                     copyInputToOutput();
-                } else
-                {
-                    if (outputQueue.isEmpty())
-                    {
+                } else {
+                    if (outputQueue.isEmpty()) {
                         overflowFileManager.load(outputQueue);
                     }
-                    if (inputQueue.size() >= limit)
-                    {
+                    if (inputQueue.size() >= limit) {
                         overflowFileManager.save(inputQueue);
                     }
                     nap();
                 }
-            } else
-            {
-                if (inputQueue.size() >= limit)
-                {
+            } else {
+                if (inputQueue.size() >= limit) {
                     overflowFileManager.save(inputQueue);
                 }
                 nap();
@@ -70,29 +61,22 @@ public class UpdaterQueue implements Runnable, UpdaterQueueMBean
         flushInMemoryQueuesToDisk();
     }
 
-    private void copyInputToOutput()
-    {
-        try
-        {
+    private void copyInputToOutput() {
+        try {
             final DelayedImpl<Change> delayedChange = inputQueue.poll(1, TimeUnit.SECONDS); // Use poll() instead of take() to not miss the shutdown flag getting flipped to true.
-            if (delayedChange != null)
-            {
+            if (delayedChange != null)  {
                 outputQueue.add(delayedChange);
             }
-        } catch (InterruptedException e)
-        {
+        } catch (InterruptedException e) {
             LOG.warn("Getting change from input queue interrupted: " + e.getMessage());
         }
     }
 
-    private void nap()
-    {
-        try
-        {
+    private void nap() {
+        try {
             Thread.sleep(250);
-
-        } catch (InterruptedException e)
-        {
+        } catch (InterruptedException e) {
+            // ignored
 
         }
     }
@@ -125,64 +109,52 @@ public class UpdaterQueue implements Runnable, UpdaterQueueMBean
     }
 
     @Override
-    public int getOutputQueueSize()
-    {
+    public int getOutputQueueSize() {
         return outputQueue.size();
     }
 
     @Override
-    public int getOverflowSize()
-    {
+    public int getOverflowSize()  {
         return overflowFileManager.size();
     }
 
     @Override
-    public String getIndex()
-    {
+    public String getIndex() {
         return index;
     }
 
-    public void shutdown()
-    {
+    public void shutdown() {
         shuttingDown = true; // Flag for thread to shut down
     }
 
     @Override
-    public void clear()
-    {
+    public void clear() {
         inputQueue.clear();
         outputQueue.clear();
         overflowFileManager.clear();
     }
 
-    private void flushInMemoryQueuesToDisk()
-    {
-        while (!outputQueue.isEmpty())
-        {
+    private void flushInMemoryQueuesToDisk(){
+        while (!outputQueue.isEmpty()) {
             overflowFileManager.save(outputQueue);
         }
 
-        while (!inputQueue.isEmpty())
-        {
+        while (!inputQueue.isEmpty()) {
             overflowFileManager.save(inputQueue);
         }
     }
 
 
-    private void registerMBean()
-    {
-        try
-        {
+    private void registerMBean(){
+        try {
             final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
             final ObjectName name = new ObjectName("org.elasticsearch.plugin.degraphmalizer.updater:type=UpdaterQueue,name=UpdaterQueue-" + index);
-            if (mbs.isRegistered(name))
-            {
+            if (mbs.isRegistered(name)) {
                 mbs.unregisterMBean(name);
             }
             mbs.registerMBean(this, name);
             LOG.info("Registered MBean");
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             LOG.error("Failed to register MBean", e);
         }
     }

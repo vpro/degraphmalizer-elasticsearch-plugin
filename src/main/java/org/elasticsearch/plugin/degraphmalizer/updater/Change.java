@@ -6,24 +6,20 @@ public class Change implements StringSerialization<Change> {
     private final String id;
     private final long version;
 
-    private int retries;
 
-    public Change() {
-        this(Action.UPDATE,"","",0,0);
+
+    protected Change() {
+        this(Action.UPDATE,"","",0);
     }
 
-    public Change(final Action action, final String type, final String id, long version) {
-        this(action,type,id,version, 0);
-    }
-
-    public Change(final Action action, final String type, final String id, long version, int retries) {
+    protected Change(final Action action, final String type, final String id, long version) {
         this.action = action;
         this.type = type;
         this.id = id;
         this.version = version;
-        this.retries = retries;
-
     }
+
+
 
     public Action action() {
         return action;
@@ -42,16 +38,20 @@ public class Change implements StringSerialization<Change> {
     }
 
     public int retries() {
-        return retries;
+        return 0;
+    }
+    public RetryChange retried(String name) {
+        return new RetryChange(this, name);
     }
 
-    public void retried() {
-        retries++;
+    public String getIndexNameOrAlias() {
+        return null;
     }
 
-    @Override
+
+        @Override
 	public String toValue() {
-        return this.action().name() + "," + this.type() + "," + this.version() + ","+this.retries()+"," + this.id();
+        return this.action().name() + "," + this.type() + "," + this.version() + "," + this.id();
     }
 
     @Override
@@ -60,10 +60,8 @@ public class Change implements StringSerialization<Change> {
         Action action = Action.valueOf(values[0]);
         String type = values[1];
         Long version = Long.valueOf(values[2]);
-        Integer retries = Integer.valueOf(values[3]);
-        String id = values[4];
-
-        return new Change(action, type, id, version, retries);
+        String id = values[3];
+        return new Change(action, type, id, version);
     }
 
     public static Change update(final String type, final String id, final long version) {
@@ -105,6 +103,6 @@ public class Change implements StringSerialization<Change> {
                 ", type='" + type + '\'' +
                 ", id='" + id + '\'' +
                 ", version=" + version +
-                "}, retries=" + retries;
+                "}";
     }
 }
