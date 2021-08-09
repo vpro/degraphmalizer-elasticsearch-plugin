@@ -34,7 +34,7 @@
       <groupId>org.elasticsearch</groupId>
       <artifactId>elasticsearch</artifactId>
       <scope>provided</scope>
-      <version>0.19.11</version>
+      <version>6.8.17</version>
     </dependency>
     <dependency>
       <groupId>org.testng</groupId>
